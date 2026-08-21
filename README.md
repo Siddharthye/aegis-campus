@@ -17,7 +17,7 @@ reviewers: [`CODEMAP.md`](CODEMAP.md)
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # 140 domain tests, no mocks, under a second
+npm test           # 154 domain tests, no mocks, under a second
 ./smoke.sh         # exercises the whole pipeline over HTTP, in another terminal
 ```
 
@@ -32,7 +32,7 @@ Campus emergencies fail in four places. Each one maps to a subsystem:
 
 | # | Failure | Subsystem |
 | --- | --- | --- |
-| 01 | People can't report fast enough | **3-tap reporting** + **SENTINEL** silent panic (triple-tap → decoy calculator, location streams silently, PIN to disarm) |
+| 01 | People can't report fast enough | **3-tap reporting** + **SENTINEL** silent panic (triple-tap → decoy calculator, location streams silently, PIN to disarm) + **SAFE WALK** dead man's switch (miss two check-ins → silent alarm with your last known position) |
 | 02 | Nobody knows exactly *where* | **BEACON** printed QR anchors → building/floor/room at 99% confidence, honest confidence shown for GPS (±30m, 40%) |
 | 03 | The control room drowns in duplicates | **FUSION** — spatial+temporal+semantic clustering, corroboration confidence, velocity auto-escalation, prank quarantine |
 | 04 | Nobody learns anything afterward | **PULSE** — heat calendar, hotspot ranking, SLA scorecards, and patrol *recommendations*, not just charts |

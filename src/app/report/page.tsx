@@ -1,5 +1,6 @@
 import { OpsShell } from '@/components/ops/OpsShell'
 import { ReportWizard } from '@/components/report/ReportWizard'
+import { SafeWalkPanel } from '@/components/sentinel/SafeWalkPanel'
 import { SentinelTrigger } from '@/components/sentinel/SentinelTrigger'
 
 export const metadata = { title: 'Report — AEGIS' }
@@ -17,8 +18,9 @@ export default function ReportPage() {
       subtitle="Three taps. Triple-tap anywhere on this screen to arm a silent alarm instead."
     >
       <SentinelTrigger>
-        <div className="mx-auto max-w-lg">
+        <div className="mx-auto flex max-w-lg flex-col gap-5">
           <ReportWizard />
+          <SafeWalkPanel />
         </div>
       </SentinelTrigger>
     </OpsShell>

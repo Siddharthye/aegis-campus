@@ -9,6 +9,12 @@ type VisibleSession = Omit<SentinelSession, 'pinHash'>
 
 const SENTINEL_EVENTS = ['sentinel.armed', 'sentinel.ping', 'sentinel.disarmed'] as const
 
+/**
+ * Safe walks are polled rather than only pushed, because an overdue walk is
+ * evaluated *on read* — nobody emits an event for a phone that went quiet.
+ */
+const SAFE_WALK_POLL_MS = 10_000
+
 const secondsSince = (iso: string): number => Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
 
 /**
@@ -36,6 +42,21 @@ export function SentinelLane() {
   useLiveEvents(SENTINEL_EVENTS, () => {
     void refresh()
   })
+
+  // Polling `/api/safe-walk` is what escalates a silent walker; the sentinel
+  // session it opens then arrives through the refresh above.
+  useEffect(() => {
+    const poll = () => {
+      void fetch('/api/safe-walk')
+        .then(() => refresh())
+        .catch(() => {
+          // A missed poll is retried in ten seconds.
+        })
+    }
+    poll()
+    const interval = setInterval(poll, SAFE_WALK_POLL_MS)
+    return () => clearInterval(interval)
+  }, [refresh])
 
   if (sessions.length === 0) {
     return (
