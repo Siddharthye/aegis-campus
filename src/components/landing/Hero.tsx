@@ -1,8 +1,8 @@
 'use client'
 
-import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+import { AnimatePresence, motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RandomLetterSwap } from '@/components/ui/RandomLetterSwap'
 import { MagneticButton } from './MagneticButton'
 
@@ -81,7 +81,6 @@ export function Hero() {
   const copyY = useTransform(scrollYProgress, [0, 1], ['0%', '28%'])
   const fade = useTransform(scrollYProgress, [0, 0.65], [1, 0])
 
-  const trackRef = useRef<HTMLDivElement>(null)
   const [slide, setSlide] = useState(0)
   const [held, setHeld] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
@@ -90,47 +89,14 @@ export function Hero() {
     setReduceMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   }, [])
 
-  const goTo = useCallback((index: number) => {
-    const track = trackRef.current
-    if (!track) return
-    const card = track.children[index] as HTMLElement | undefined
-    if (!card) return
-    track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' })
-    setSlide(index)
-  }, [])
-
-  // Autoplay: hold on hover/touch, and never move under reduced motion.
+  // Autoplay: hold under the pointer, and never move under reduced motion.
   useEffect(() => {
     if (held || reduceMotion) return
     const timer = setInterval(() => {
-      setSlide((current) => {
-        const next = (current + 1) % SLIDES.length
-        const track = trackRef.current
-        const card = track?.children[next] as HTMLElement | undefined
-        if (track && card) {
-          track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' })
-        }
-        return next
-      })
+      setSlide((current) => (current + 1) % SLIDES.length)
     }, AUTOPLAY_MS)
     return () => clearInterval(timer)
   }, [held, reduceMotion])
-
-  // Manual swipes move the indicator too: track which card owns the viewport.
-  const onScroll = useCallback(() => {
-    const track = trackRef.current
-    if (!track) return
-    const cards = Array.from(track.children) as HTMLElement[]
-    const centre = track.scrollLeft + track.clientWidth / 2
-    const nearest = cards.reduce(
-      (best, card, index) => {
-        const distance = Math.abs(card.offsetLeft + card.clientWidth / 2 - centre)
-        return distance < best.distance ? { index, distance } : best
-      },
-      { index: 0, distance: Number.POSITIVE_INFINITY },
-    )
-    setSlide(nearest.index)
-  }, [])
 
   return (
     <section ref={sectionRef} className="relative flex min-h-[100svh] flex-col overflow-hidden">
@@ -171,29 +137,11 @@ export function Hero() {
           Campus Emergency Response OS
         </motion.p>
 
-        {/* Line-by-line reveal on arrival; the letter swap only ever runs
-            under the cursor, never on its own. */}
+        {/* The headline stands still until hovered — the letter swap is the
+            only animation it ever performs. */}
         <h1 className="mt-6 font-[family-name:var(--font-display)] text-5xl font-bold tracking-tight sm:text-6xl xl:text-7xl">
-          {(
-            [
-              { label: 'Every second,', accent: false },
-              { label: 'accounted for.', accent: true },
-            ] as const
-          ).map((line, index) => (
-            <span key={line.label} className="block overflow-hidden">
-              <motion.span
-                initial={{ y: '110%', opacity: 0, filter: 'blur(8px)' }}
-                animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
-                transition={{ duration: 0.9, delay: 0.45 + index * 0.12, ease: EASE }}
-                className="block"
-              >
-                <RandomLetterSwap
-                  label={line.label}
-                  className={`cursor-default ${line.accent ? 'text-ops-accent' : ''}`}
-                />
-              </motion.span>
-            </span>
-          ))}
+          <RandomLetterSwap label="Every second," className="cursor-default" />
+          <RandomLetterSwap label="accounted for." className="cursor-default text-ops-accent" />
         </h1>
 
         {/* The support line brightens word by word as scrolling begins,
@@ -228,48 +176,63 @@ export function Hero() {
         </motion.div>
       </motion.div>
 
-      {/* The capability carousel: floating glass cards, snap + autoplay. */}
+      {/* The carousel: one capability at a time on a wide glass slab —
+          autoplay that holds under the pointer, arrows, and a segmented
+          progress bar. Presentation only; every slide is an existing screen. */}
       <motion.div
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, delay: 0.95, ease: EASE }}
+        transition={{ duration: 0.9, delay: 0.5, ease: EASE }}
         className="relative z-10 pb-8"
         onPointerEnter={() => setHeld(true)}
         onPointerLeave={() => setHeld(false)}
       >
-        <div
-          ref={trackRef}
-          onScroll={onScroll}
-          className="scrollbar-none mx-auto flex w-[min(1200px,calc(100%-2rem))] snap-x snap-mandatory gap-4 overflow-x-auto pb-4"
-        >
-          {SLIDES.map((entry, index) => (
-            <Link
-              key={entry.id}
-              href={entry.href}
-              className={`glass-chrome group relative w-[78vw] max-w-[400px] shrink-0 snap-start rounded-2xl p-5 transition-colors sm:w-[360px] ${
-                index === slide ? 'border-ops-accent/40' : 'hover:border-ops-accent/30'
-              }`}
+        <div className="glass-chrome relative mx-auto w-[min(1200px,calc(100%-2rem))] overflow-hidden rounded-2xl">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={SLIDES[slide].id}
+              initial={reduceMotion ? false : { opacity: 0, x: 56 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, x: -56 }}
+              transition={{ duration: 0.45, ease: EASE }}
+              className="grid min-h-[168px] gap-2 p-6 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-8 sm:px-16 sm:py-8"
             >
-              <p className="ops-label text-ops-accent">{entry.kicker}</p>
-              <p className="mt-2 font-[family-name:var(--font-display)] text-xl font-bold tracking-tight text-ops-text">
-                {entry.title}
-              </p>
-              <p className="mt-2 text-[12.5px] leading-relaxed text-ops-muted">{entry.body}</p>
-              <p className="mt-4 text-[12px] font-semibold text-ops-accent opacity-80 transition-opacity group-hover:opacity-100">
-                {entry.cta} →
-              </p>
-            </Link>
-          ))}
+              <p className="ops-label w-28 text-ops-accent">{SLIDES[slide].kicker}</p>
+              <div>
+                <p className="font-[family-name:var(--font-display)] text-2xl font-bold tracking-tight text-ops-text sm:text-3xl">
+                  {SLIDES[slide].title}
+                </p>
+                <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-ops-muted sm:text-sm">
+                  {SLIDES[slide].body}
+                </p>
+              </div>
+              <Link
+                href={SLIDES[slide].href}
+                className="w-fit rounded-full border border-ops-accent/40 bg-ops-accent/10 px-4 py-2 text-[13px] font-semibold text-ops-accent transition hover:bg-ops-accent/20"
+              >
+                {SLIDES[slide].cta} &rarr;
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+
+          <CarouselArrow
+            direction="previous"
+            onClick={() => setSlide((current) => (current + SLIDES.length - 1) % SLIDES.length)}
+          />
+          <CarouselArrow
+            direction="next"
+            onClick={() => setSlide((current) => (current + 1) % SLIDES.length)}
+          />
         </div>
 
-        {/* Progress: one segment per slide, the active one filling. */}
-        <div className="mx-auto mt-1 flex w-[min(1200px,calc(100%-2rem))] gap-1.5">
+        {/* Progress: one segment per slide, the active one filled. */}
+        <div className="mx-auto mt-3 flex w-[min(1200px,calc(100%-2rem))] gap-1.5">
           {SLIDES.map((entry, index) => (
             <button
               key={entry.id}
               type="button"
               aria-label={`Show ${entry.kicker}`}
-              onClick={() => goTo(index)}
+              onClick={() => setSlide(index)}
               className="h-1 flex-1 overflow-hidden rounded-full bg-ops-border/60"
             >
               <span
@@ -280,6 +243,7 @@ export function Hero() {
           ))}
         </div>
       </motion.div>
+
     </section>
   )
 }
@@ -311,6 +275,36 @@ function SupportWord({
     <motion.span style={{ color }} className="inline-block">
       {word}
     </motion.span>
+  )
+}
+
+function CarouselArrow({
+  direction,
+  onClick,
+}: {
+  direction: 'previous' | 'next'
+  onClick: () => void
+}) {
+  const next = direction === 'next'
+  return (
+    <button
+      type="button"
+      aria-label={`${next ? 'Next' : 'Previous'} capability`}
+      onClick={onClick}
+      className={`absolute top-1/2 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-ops-border bg-ops-panel/80 text-ops-muted transition hover:border-ops-accent/40 hover:text-ops-text sm:grid ${
+        next ? 'right-3' : 'left-3'
+      }`}
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+        <path
+          d={next ? 'M5 2.5 9.5 7 5 11.5' : 'M9 2.5 4.5 7 9 11.5'}
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
   )
 }
 
