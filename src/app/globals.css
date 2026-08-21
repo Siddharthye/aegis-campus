@@ -1,0 +1,134 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ops-bg: #0a0e17;
+  --color-ops-deep: #05070d;
+  --color-ops-panel: #121826;
+  --color-ops-lift: #182034;
+  --color-ops-border: #1f2937;
+  --color-ops-text: #e5e7eb;
+  --color-ops-muted: #8b95a7;
+  --color-ops-faint: #5b647a;
+  --color-ops-accent: #38bdf8;
+
+  --color-sev-p0: #ef4444;
+  --color-sev-p1: #f97316;
+  --color-sev-p2: #eab308;
+  --color-sev-p3: #38bdf8;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, 'Cascadia Code', monospace;
+}
+
+html {
+  background: var(--color-ops-deep);
+  color: var(--color-ops-text);
+  scroll-behavior: auto; /* Lenis owns scrolling on the landing page. */
+}
+
+body {
+  background: var(--color-ops-deep);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgb(56 189 248 / 0.25);
+}
+
+/* ── Ops idioms ─────────────────────────────────────────────────────────── */
+
+/* Micro-label: the uppercase mono tag used across every ops surface. */
+.ops-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Pulse for live indicators and P0 markers. Opacity only — compositor-cheap. */
+@keyframes siren-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.siren-pulse {
+  animation: siren-pulse 1.1s ease-in-out infinite;
+}
+
+/* ── Landing surfaces ───────────────────────────────────────────────────── */
+
+/* Fine dot grid that gives the deep background texture without weight. */
+.landing-grid {
+  background-image: radial-gradient(rgb(56 189 248 / 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Soft radial glow used behind hero content and section headings. */
+.glow-accent {
+  background: radial-gradient(ellipse 55% 45% at 50% 40%, rgb(56 189 248 / 0.14), transparent 70%);
+}
+
+.glow-danger {
+  background: radial-gradient(ellipse 50% 40% at 50% 50%, rgb(239 68 68 / 0.1), transparent 70%);
+}
+
+/* Hairline gradient border for premium cards. */
+.card-sheen {
+  position: relative;
+}
+
+.card-sheen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, rgb(56 189 248 / 0.35), rgb(31 41 55 / 0.6) 35%, rgb(31 41 55 / 0.3));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Marquee for the capability strip. Transform-only, GPU-composited. */
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee-x 36s linear infinite;
+  will-change: transform;
+}
+
+/* ── Accessibility ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .siren-pulse,
+  .marquee-track {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

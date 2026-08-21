@@ -1,0 +1,80 @@
+# AEGIS — Campus Emergency Response OS
+
+**Every second, accounted for.** Report an emergency in three taps, locate it
+to the room (not the block), fuse fifty duplicate reports into one incident,
+dispatch the nearest responder — with an SLA clock running on every transition.
+
+Built by **Team PROMPT & PRAY (HA-040-7800)** for HACQUIRE 2026 · PS-01 Smart
+Campus Emergency Response.
+
+---
+
+## Run it
+
+```bash
+npm install
+npm run dev        # http://localhost:3000
+```
+
+That's the whole setup: no database, no API keys, no accounts. Seeded demo
+data appears on first load, and everything — including the AI assistant — works
+with the wifi off. Optional integrations (Claude triage, Redis persistence)
+are documented in [`.env.example`](.env.example).
+
+## The four failure points
+
+Campus emergencies fail in four places. Each one maps to a subsystem:
+
+| # | Failure | Subsystem |
+| --- | --- | --- |
+| 01 | People can't report fast enough | **3-tap reporting** + **SENTINEL** silent panic (triple-tap → decoy calculator, location streams silently, PIN to disarm) |
+| 02 | Nobody knows exactly *where* | **BEACON** printed QR anchors → building/floor/room at 99% confidence, honest confidence shown for GPS (±30m, 40%) |
+| 03 | The control room drowns in duplicates | **FUSION** — spatial+temporal+semantic clustering, corroboration confidence, velocity auto-escalation, prank quarantine |
+| 04 | Nobody learns anything afterward | **PULSE** — heat calendar, hotspot ranking, SLA scorecards, and patrol *recommendations*, not just charts |
+
+Plus **DRILL MODE**: a deterministic, fully offline replay of a scripted campus
+emergency through the real pipeline — reports, fusion, dispatch, resolution —
+ending in a graded after-action report. Campuses are required to run drills;
+we made the drill a product feature.
+
+## The seats
+
+| Route | Seat | What happens there |
+| --- | --- | --- |
+| `/` | — | The landing page |
+| `/report` | Student / staff | 3-tap report, anonymous toggle, QR anchor location, SENTINEL |
+| `/control` | Dispatcher | Live queue ranked by SLA pressure, dispatch recommendations with reasons, silent-alarm lane, drill panel |
+| `/respond` | Responder | My assignment, thumb-sized status advances, live SLA clock |
+| `/analytics` | Admin | PULSE analytics + patrol plan |
+| `/beacon` | Admin | Printable QR anchor sheets |
+
+**NEXBOT**, the ops copilot (floating bot button, every screen), answers
+questions from the live incident store — "what needs attention", "any SLA
+breaches", "who is free" — with zero external dependencies.
+
+## Bought & sold (the HACQUIRE part)
+
+Three of AEGIS's six subsystems are listed on the trading floor as standalone
+products, each in its own repo with its own README, API, widget, and React
+embed — and AEGIS consumes them **only over their public HTTP APIs**, which is
+the proof they're genuinely standalone:
+
+| Module | Repo | Listed at |
+| --- | --- | --- |
+| SIREN — geofenced alerts & broadcast | `siren-alerts` | ₹5.00 Cr |
+| ATLAS — live 3D map + triage engine | `atlas-incident-map` | ₹5.00 Cr |
+| FUSION — duplicate report fusion | `fusion-reports` | ₹5.00 Cr |
+
+Modules acquired from other teams plug into pre-wired integration slots
+(`src/integrations/`) through a server-side proxy (`/api/ext`) — integration
+is one config entry, not an afternoon.
+
+## Architecture in one breath
+
+Next.js 16 App Router / React 19 / TypeScript strict / Tailwind v4. Pure
+domain logic in `src/domain` (dispatch ranking, SLA clocks, triage, pulse
+analytics — all unit-testable functions with JSDoc examples). Thin zod-validated
+routes. A four-method storage adapter: in-memory + JSON locally, Upstash Redis
+when deployed. Realtime via self-rotating SSE streams that survive serverless
+timeouts. Reasoning behind every non-obvious call: [`DECISIONS.md`](DECISIONS.md).
+Reading order for reviewers: [`CODEMAP.md`](CODEMAP.md).
