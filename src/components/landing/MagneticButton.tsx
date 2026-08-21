@@ -36,7 +36,7 @@ export function MagneticButton({ href, children, variant = 'primary' }: Magnetic
 
   const styles =
     variant === 'primary'
-      ? 'bg-ops-accent text-ops-deep hover:bg-sky-300'
+      ? 'bg-ops-accent text-ops-deep hover:bg-[#c4b5fd]'
       : 'border border-ops-border bg-ops-panel/60 text-ops-text hover:border-ops-accent/50'
 
   return (
@@ -45,11 +45,11 @@ export function MagneticButton({ href, children, variant = 'primary' }: Magnetic
       onPointerMove={onPointerMove}
       onPointerLeave={reset}
       style={{ x: springX, y: springY }}
-      className="inline-block"
+      className="block sm:inline-block"
     >
       <Link
         href={href}
-        className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-tight transition-colors ${styles}`}
+        className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold tracking-tight transition-colors sm:inline-flex sm:w-auto ${styles}`}
       >
         {children}
       </Link>

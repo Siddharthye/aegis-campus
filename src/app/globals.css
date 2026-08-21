@@ -143,6 +143,24 @@ body {
   }
 }
 
+/* Story-style autoplay progress: the active segment fills across the
+   autoplay window. Transform-only, so pausing it costs nothing. */
+@keyframes carousel-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.carousel-fill {
+  animation-name: carousel-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  transform-origin: left;
+}
+
 /* ── Print ──────────────────────────────────────────────────────────────── */
 
 /* Compliance artifacts are printed or saved as PDF by the browser itself, so
