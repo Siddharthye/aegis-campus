@@ -356,6 +356,7 @@ export function buildDemoHistory(seed: number, until: Date = new Date()): Incide
         { at: created.toISOString(), actor: 'pulse-sim', action: 'reported', detail: 'Simulated history' },
         { at: resolved.toISOString(), actor: 'pulse-sim', action: 'resolved' },
       ],
+      evidence: [],
       isDrill: false,
     }
   })

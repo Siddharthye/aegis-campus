@@ -58,6 +58,7 @@ export const seedIncidents: Incident[] = [
       { at: at(6), actor: 'student-2214', action: 'reported', detail: 'Via QR anchor LIB-G-01' },
       { at: at(5), actor: 'system', action: 'triaged', detail: 'P1 — medical, 3 corroborating reports' },
     ],
+    evidence: [],
     isDrill: false,
   },
   {
@@ -86,6 +87,7 @@ export const seedIncidents: Incident[] = [
       { at: at(42), actor: 'staff-118', action: 'reported' },
       { at: at(40), actor: 'dispatcher', action: 'dispatched', detail: 'P. Sahoo (maintenance)' },
     ],
+    evidence: [],
     isDrill: false,
   },
   {
@@ -113,6 +115,7 @@ export const seedIncidents: Incident[] = [
       { at: at(186), actor: 'dispatcher', action: 'dispatched', detail: 'A. Pradhan (security)' },
       { at: at(164), actor: 'resp-sec-1', action: 'resolved', detail: 'Area patrolled, reporter followed up' },
     ],
+    evidence: [],
     isDrill: false,
   },
   {
@@ -142,6 +145,7 @@ export const seedIncidents: Incident[] = [
       { at: at(1434), actor: 'dispatcher', action: 'dispatched', detail: 'K. Das (fire)' },
       { at: at(1408), actor: 'resp-fire-1', action: 'resolved', detail: 'Overheated hotplate, isolated' },
     ],
+    evidence: [],
     isDrill: false,
   },
 ]

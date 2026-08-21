@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { escalationRationale, severityFromCorroboration } from '@/domain/corroboration'
 import { recommendResponders, type DispatchRecommendation } from '@/domain/dispatch'
 import { readSla } from '@/domain/sla'
+import type { EvidenceItem } from '@/domain/evidence'
 import type {
   Incident,
   IncidentCategory,
@@ -47,6 +48,7 @@ export interface CreateIncidentInput {
   location: LocatedPosition
   reporterId: string | null
   isDrill?: boolean
+  evidence?: EvidenceItem[]
   /** SHA-256 of a VEIL case token, when the reporter wants to follow up. */
   caseTokenHash?: string
 }
@@ -82,6 +84,7 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
     createdAt: new Date().toISOString(),
     resolvedAt: null,
     timeline: [entry(input.reporterId ?? 'anonymous', 'reported', input.location.label)],
+    evidence: input.evidence ?? [],
     isDrill: input.isDrill ?? false,
     ...(input.caseTokenHash ? { caseTokenHash: input.caseTokenHash } : {}),
   }
@@ -302,4 +305,32 @@ export async function clearDrillIncidents(): Promise<void> {
 export async function findIncidentByCaseTokenHash(hash: string): Promise<Incident | null> {
   const incidents = await loadIncidents()
   return incidents.find((incident) => incident.caseTokenHash === hash) ?? null
+}
+
+/**
+ * Records a responder's current position.
+ *
+ * Positions are overwritten rather than accumulated: the control room needs to
+ * know where a unit *is*, and keeping a movement history of staff would be
+ * surveillance of employees rather than emergency response.
+ *
+ * @example
+ * await updateResponderLocation('resp-fire-1', 20.3536, 85.8195)
+ */
+export async function updateResponderLocation(
+  responderId: string,
+  lat: number,
+  lng: number,
+): Promise<Responder | null> {
+  const responders = await loadResponders()
+  const responder = responders.find((item) => item.id === responderId)
+  if (!responder) return null
+
+  const updated: Responder = { ...responder, location: { lat, lng } }
+  await store.writeCollection(
+    RESPONDERS,
+    responders.map((item) => (item.id === responderId ? updated : item)),
+  )
+  await store.appendEvent('responder.moved', { responderId, lat, lng })
+  return updated
 }

@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import type { EvidenceItem } from '@/domain/evidence'
 import type { Incident, IncidentCategory, LocatedPosition, Severity } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
+import { EvidencePicker } from './EvidencePicker'
 import { LocationStep } from './LocationStep'
+import { useOfflineQueue } from './use-offline-queue'
 import { CATEGORY_OPTIONS, suggestTitle } from './report-model'
 
 type Step = 'category' | 'location' | 'review'
@@ -23,10 +26,13 @@ export function ReportWizard() {
   const [location, setLocation] = useState<LocatedPosition | null>(null)
   const [description, setDescription] = useState('')
   const [anonymous, setAnonymous] = useState(false)
+  const [evidence, setEvidence] = useState<EvidenceItem[]>([])
   const [wantsCaseToken, setWantsCaseToken] = useState(true)
   const [submitted, setSubmitted] = useState<Incident | null>(null)
   const [caseToken, setCaseToken] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [queuedOffline, setQueuedOffline] = useState(false)
+  const { queue, queued, online } = useOfflineQueue()
 
   const chooseCategory = (option: (typeof CATEGORY_OPTIONS)[number]) => {
     setCategory(option.category)
@@ -37,29 +43,69 @@ export function ReportWizard() {
   const submit = async () => {
     if (!category || !location) return
 
+    const payload = {
+      category,
+      severity,
+      title: suggestTitle(category, location.label, description),
+      description: description.trim() || 'No further detail given by the reporter.',
+      location,
+      reporterId: anonymous ? null : 'student-2214',
+      evidence,
+      wantsCaseToken,
+    }
+
     setSending(true)
     try {
       const response = await fetch('/api/incidents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category,
-          severity,
-          title: suggestTitle(category, location.label, description),
-          description: description.trim() || 'No further detail given by the reporter.',
-          location,
-          reporterId: anonymous ? null : 'student-2214',
-          wantsCaseToken,
-        }),
+        body: JSON.stringify(payload),
       })
-      if (!response.ok) return
+      if (!response.ok) throw new Error(`Server responded ${response.status}`)
 
       const body = (await response.json()) as { incident: Incident; caseToken: string | null }
       setSubmitted(body.incident)
       setCaseToken(body.caseToken)
+    } catch {
+      // Dead zone. Hold the report on the device rather than losing it, and
+      // say so plainly — a reporter who thinks a message was delivered when it
+      // was not is worse off than one who knows to find a signal.
+      queue(payload)
+      setQueuedOffline(true)
     } finally {
       setSending(false)
     }
+  }
+
+  if (queuedOffline) {
+    return (
+      <div className="rounded-lg border border-sev-p1/40 bg-sev-p1/5 p-5 text-center">
+        <p className="ops-label text-sev-p1">Saved on this device</p>
+        <p className="mt-2 text-[13px] leading-relaxed text-ops-text">
+          No signal right now, so your report is held here and will send by itself the moment
+          you are back in range. Keep this page open if you can.
+        </p>
+        <p className="mt-2 text-[11px] text-ops-muted">
+          {queued.length} report{queued.length === 1 ? '' : 's'} waiting.
+          {' '}If this is life-threatening, find a signal or reach campus security directly.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => {
+            setQueuedOffline(false)
+            setStep('category')
+            setCategory(null)
+            setLocation(null)
+            setDescription('')
+            setEvidence([])
+          }}
+          className="mt-4 rounded-md border border-ops-border px-3 py-1.5 text-[12px] text-ops-muted transition-colors hover:text-ops-text"
+        >
+          File another report
+        </button>
+      </div>
+    )
   }
 
   if (submitted) {
@@ -95,6 +141,7 @@ export function ReportWizard() {
             setCategory(null)
             setLocation(null)
             setDescription('')
+            setEvidence([])
           }}
           className="mt-4 rounded-md border border-ops-border px-3 py-1.5 text-[12px] text-ops-muted transition-colors hover:text-ops-text"
         >
@@ -106,6 +153,14 @@ export function ReportWizard() {
 
   return (
     <div className="flex flex-col gap-4">
+      {(!online || queued.length > 0) && (
+        <p className="rounded-md border border-sev-p1/40 bg-sev-p1/5 px-3 py-2 text-[11px] text-sev-p1">
+          {online
+            ? `Back online — sending ${queued.length} held report${queued.length === 1 ? '' : 's'}.`
+            : 'No signal. Reports you file now are saved here and sent automatically later.'}
+        </p>
+      )}
+
       <StepIndicator step={step} />
 
       {step === 'category' && (
@@ -166,7 +221,9 @@ export function ReportWizard() {
               className="mt-3 w-full resize-none rounded-md border border-ops-border bg-ops-bg px-2.5 py-2 text-[12px] text-ops-text placeholder:text-ops-faint focus:border-ops-accent/50 focus:outline-none"
             />
 
-            <label className="mt-2 flex items-center gap-2 text-[12px] text-ops-muted">
+            <EvidencePicker evidence={evidence} onChange={setEvidence} />
+
+            <label className="mt-3 flex items-center gap-2 text-[12px] text-ops-muted">
               <input
                 type="checkbox"
                 checked={anonymous}

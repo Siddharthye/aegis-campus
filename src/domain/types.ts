@@ -1,3 +1,5 @@
+import type { EvidenceItem } from './evidence'
+
 /**
  * Core vocabulary for AEGIS. Everything in `domain/` is pure data and pure
  * functions — no I/O, no framework imports — so the logic that decides how an
@@ -64,6 +66,8 @@ export interface Incident {
   createdAt: string
   resolvedAt: string | null
   timeline: TimelineEntry[]
+  /** Photos attached by the reporter, already downscaled and EXIF-stripped. */
+  evidence: EvidenceItem[]
   /** True when this incident was produced by a drill scenario, not reality. */
   isDrill: boolean
   /**

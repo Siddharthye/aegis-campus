@@ -54,6 +54,10 @@ Then the two that turn history into action:
 | [`src/lib/drill-service.ts`](src/lib/drill-service.ts) | Drill steps execute through the same service functions the consoles use — a drill incident is a real incident flagged `isDrill`, not a parallel simulation. |
 | [`src/domain/ext-allowlist.ts`](src/domain/ext-allowlist.ts) | The `/api/ext` proxy makes a server-side fetch to a URL the browser supplies, so the destination is allowlisted rather than trusted. |
 | [`src/integrations/registry.ts`](src/integrations/registry.ts) | Pre-wired, empty integration slots. Mounting a module bought on the trading floor is one entry in `integrations.config.ts`. |
+| [`src/domain/evacuation.ts`](src/domain/evacuation.ts) | Turns the map into an instruction. A muster point inside the hazard radius is discarded *before* proximity is considered. |
+| [`src/domain/case-token.ts`](src/domain/case-token.ts) | VEIL: anonymous follow-up. Only `sha256(token)` is stored, and `toCaseStatus` is a deliberately narrow projection. |
+| [`src/components/report/prepare-evidence.ts`](src/components/report/prepare-evidence.ts) | Re-encoding a photo through a canvas strips EXIF as a side effect — a privacy guarantee produced by the mechanism, not by a library. |
+| [`src/domain/offline-queue.ts`](src/domain/offline-queue.ts) | Campus dead zones are where emergencies happen. Reports are held on the device and flushed on reconnect. |
 
 ---
 
@@ -69,6 +73,8 @@ I/O. Read these to see the rules stated as expectations:
 | [`src/domain/ext-allowlist.test.ts`](src/domain/ext-allowlist.test.ts) | The proxy blocks cloud metadata, non-http schemes, and lookalike hosts |
 | [`src/domain/case-token.test.ts`](src/domain/case-token.test.ts) | A reporter's own case view leaks no incident id, description, or internal chatter |
 | [`src/domain/corroboration.test.ts`](src/domain/corroboration.test.ts) | Escalation is one-way and needs volume *and* confidence |
+| [`src/domain/offline-queue.test.ts`](src/domain/offline-queue.test.ts) | Corrupt device storage degrades to an empty queue, never a crash |
+| [`src/domain/evidence.test.ts`](src/domain/evidence.test.ts) | A non-image payload dressed up as an attachment is refused |
 
 ## Directory map
 

@@ -26,6 +26,28 @@ const UNIT_FOR_CATEGORY: Record<IncidentCategory, ResponderUnit> = {
 /** Average brisk walking speed used for ETA estimates. */
 const WALKING_METRES_PER_MIN = 85
 
+export interface ArrivalEstimate {
+  distanceM: number
+  etaMinutes: number
+}
+
+/**
+ * How far a responder still has to travel, and how long it should take.
+ *
+ * Separated from {@link recommendResponders} because it is also the *live*
+ * calculation: once a responder is dispatched and streaming position, the
+ * control room recomputes this on every movement, so the ETA on screen decays
+ * toward zero instead of being frozen at the moment of assignment.
+ *
+ * @example
+ * estimateArrival({ lat: 20.3536, lng: 85.8195 }, incident.location)
+ * // => { distanceM: 210, etaMinutes: 3 }
+ */
+export function estimateArrival(from: Coordinates, to: Coordinates): ArrivalEstimate {
+  const distanceM = Math.round(distanceInMetres(from, to))
+  return { distanceM, etaMinutes: Math.max(1, Math.round(distanceM / WALKING_METRES_PER_MIN)) }
+}
+
 export interface DispatchRecommendation {
   responder: Responder
   distanceM: number
@@ -59,8 +81,7 @@ export function recommendResponders(
   })
 
   return ranked.map((responder) => {
-    const distanceM = Math.round(distanceInMetres(responder.location, incident.location))
-    const etaMinutes = Math.max(1, Math.round(distanceM / WALKING_METRES_PER_MIN))
+    const { distanceM, etaMinutes } = estimateArrival(responder.location, incident.location)
     const unitNote = responder.unit === preferredUnit ? `Nearest available ${responder.unit} unit` : `Fallback (${responder.unit}) — no ${preferredUnit} unit free`
 
     return { responder, distanceM, etaMinutes, reason: `${unitNote} — ${distanceM}m away` }

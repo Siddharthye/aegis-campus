@@ -1,0 +1,20 @@
+{
+  "name": "AEGIS — Campus Emergency Response",
+  "short_name": "AEGIS",
+  "description": "Report an emergency in three taps. Works without a signal.",
+  "start_url": "/report",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05070d",
+  "theme_color": "#05070d",
+  "categories": ["utilities", "medical"],
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Report an emergency", "url": "/report" },
+    { "name": "Check a case", "url": "/case" }
+  ]
+}

@@ -5,7 +5,9 @@ import type { DispatchRecommendation } from '@/domain/dispatch'
 import type { Incident, IncidentStatus } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
 import { StatusBadge } from '@/components/ops/StatusBadge'
+import { AssignedUnits } from './AssignedUnits'
 import { EvacuationPanel } from './EvacuationPanel'
+import { EvidenceStrip } from './EvidenceStrip'
 import { IncidentTimeline } from './IncidentTimeline'
 
 /** The transition offered next, per current status. Resolved offers nothing. */
@@ -122,6 +124,10 @@ export function IncidentDetail({
           </ul>
         </section>
       )}
+
+      <EvidenceStrip evidence={incident.evidence} />
+
+      <AssignedUnits incident={incident} />
 
       <EvacuationPanel incident={incident} onUseInstruction={setBroadcastMessage} />
 

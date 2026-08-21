@@ -7,6 +7,7 @@ import type { Incident, IncidentStatus, Responder } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
 import { StatusBadge } from '@/components/ops/StatusBadge'
 import { useLiveEvents } from '@/hooks/use-live-events'
+import { useResponderTracking } from './use-responder-tracking'
 
 const PIPELINE_EVENTS = ['incident.created', 'incident.updated'] as const
 
@@ -69,6 +70,13 @@ export function ResponderBoard() {
       incident.status !== 'resolved',
   )
 
+  // Tracking is scoped to an active assignment — see the hook for why.
+  const arrival = useResponderTracking({
+    responderId: responder?.id ?? null,
+    fallbackFrom: responder?.location ?? null,
+    active: assignment !== undefined && assignment.status !== 'resolved',
+  })
+
   const advance = async (status: IncidentStatus) => {
     if (!assignment || !responder) return
     await fetch(`/api/incidents/${assignment.id}`, {
@@ -124,6 +132,13 @@ export function ResponderBoard() {
               {assignment.location.method}
               {assignment.location.floor !== undefined && ` · floor ${assignment.location.floor}`}
             </p>
+
+            {arrival && assignment.status !== 'on-scene' && (
+              <p className="mt-2 flex items-center gap-1.5 border-t border-ops-accent/20 pt-2 font-mono text-[12px] text-ops-accent">
+                <span className="siren-pulse size-1.5 rounded-full bg-current" />
+                {arrival.distanceM}m away · ETA {arrival.etaMinutes} min
+              </p>
+            )}
           </div>
 
           {(() => {

@@ -1,4 +1,18 @@
 import { z } from 'zod'
+import { MAX_EVIDENCE_ITEMS, isAcceptableEvidence } from '@/domain/evidence'
+
+/**
+ * Evidence arrives already downscaled and re-encoded by the browser. The
+ * server still re-checks type and size, because a client-side guarantee is a
+ * convenience for honest callers, not a security boundary.
+ */
+const evidenceSchema = z.object({
+  id: z.string().min(1).max(40),
+  dataUrl: z.string().refine(isAcceptableEvidence, 'Unsupported or oversized image'),
+  capturedAt: z.string(),
+  metadataStripped: z.literal(true),
+  byteSize: z.number().int().nonnegative(),
+})
 
 export const severitySchema = z.enum(['P0', 'P1', 'P2', 'P3'])
 export const categorySchema = z.enum([
@@ -30,6 +44,7 @@ export const createIncidentSchema = z.object({
   /** Null reports anonymously. */
   reporterId: z.string().min(1).max(80).nullable().default(null),
   isDrill: z.boolean().default(false),
+  evidence: z.array(evidenceSchema).max(MAX_EVIDENCE_ITEMS).default([]),
   /**
    * Ask for a VEIL case token so this report can be followed up anonymously.
    * The token is returned once, in the create response, and never again.

@@ -17,7 +17,7 @@ reviewers: [`CODEMAP.md`](CODEMAP.md)
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # 113 domain tests, no mocks, under a second
+npm test           # 140 domain tests, no mocks, under a second
 ./smoke.sh         # exercises the whole pipeline over HTTP, in another terminal
 ```
 
@@ -37,6 +37,12 @@ Campus emergencies fail in four places. Each one maps to a subsystem:
 | 03 | The control room drowns in duplicates | **FUSION** — spatial+temporal+semantic clustering, corroboration confidence, velocity auto-escalation, prank quarantine |
 | 04 | Nobody learns anything afterward | **PULSE** — heat calendar, hotspot ranking, SLA scorecards, and patrol *recommendations*, not just charts |
 
+Installable as a PWA, and the report screen keeps working with no signal:
+reports filed in a dead zone are held on the device and sent automatically on
+reconnect, because campus dead zones are disproportionately where emergencies
+happen. Attached photos are downscaled and re-encoded in the browser, which
+strips the GPS and camera metadata a phone embeds — and the UI says so.
+
 Plus **DRILL MODE**: a deterministic, fully offline replay of a scripted campus
 emergency through the real pipeline — reports, fusion, dispatch, resolution —
 ending in a graded after-action report. Campuses are required to run drills;
@@ -52,6 +58,7 @@ we made the drill a product feature.
 | `/respond` | Responder | My assignment, thumb-sized status advances, live SLA clock |
 | `/analytics` | Admin | PULSE analytics + patrol plan |
 | `/beacon` | Admin | Printable QR anchor sheets |
+| `/case` | Anyone | **VEIL** — check a case with the one-way token from your report. No account, no name |
 
 **NEXBOT**, the ops copilot (floating bot button, every screen), answers
 questions from the live incident store — "what needs attention", "any SLA
