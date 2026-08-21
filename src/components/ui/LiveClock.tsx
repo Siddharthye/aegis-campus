@@ -1,5 +1,6 @@
 'use client'
 
+import { describeIdentity, useIdentity } from '@/lib/identity'
 import { formatDate, formatTime, useLiveClock } from './use-live-clock'
 
 /**
@@ -12,10 +13,20 @@ import { formatDate, formatTime, useLiveClock } from './use-live-clock'
  */
 export function LiveClock() {
   const now = useLiveClock()
+  const identity = useIdentity()
 
   return (
-    <span
-      className="ops-label flex items-center gap-2 rounded-md border border-ops-border bg-ops-panel px-2.5 py-1.5 text-ops-muted"
+    <span className="ops-label flex flex-wrap items-center gap-2">
+      {identity && (
+        <span
+          className="flex items-center gap-2 rounded-md border border-ops-accent/25 bg-ops-accent/10 px-2.5 py-1.5 text-ops-accent"
+          title="Everything you file is attributed to this"
+        >
+          {describeIdentity(identity)}
+        </span>
+      )}
+      <span
+      className="flex items-center gap-2 rounded-md border border-ops-border bg-ops-panel px-2.5 py-1.5 text-ops-muted"
       title="Local time on this device"
     >
       <span className="siren-pulse size-1.5 rounded-full bg-emerald-400" />
@@ -27,6 +38,7 @@ export function LiveClock() {
         <span className="text-ops-faint">{formatDate(now)}</span>
         <span className="text-ops-text">{formatTime(now)}</span>
       </time>
+      </span>
     </span>
   )
 }

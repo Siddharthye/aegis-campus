@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import { ServiceWorkerRegistrar } from '@/components/ops/ServiceWorkerRegistrar'
 import { CommandPalette } from '@/components/ui/CommandPalette'
 import { Dock } from '@/components/ui/Dock'
+import { IdentityGate } from '@/components/ui/IdentityGate'
 import './globals.css'
 
 /* next/font downloads at build time and self-hosts — no runtime font requests,
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased">
         {children}
         <Dock />
+        <IdentityGate />
         <CommandPalette />
         {/* Static film grain over everything — texture, not animation. */}
         <div aria-hidden className="grain-overlay print-hide" />

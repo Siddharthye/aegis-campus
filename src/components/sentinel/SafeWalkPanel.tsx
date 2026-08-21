@@ -11,6 +11,7 @@ import {
   walkProgress,
   type SafeWalk,
 } from '@/domain/safe-walk'
+import { useIdentity } from '@/lib/identity'
 
 /** Durations offered, in minutes. Covers a walk across campus and back. */
 const DURATION_OPTIONS = [5, 10, 15, 25] as const
@@ -28,6 +29,7 @@ const secondsUntil = (when: Date, now: Date) =>
  */
 export function SafeWalkPanel({ presetDestination = '' }: { presetDestination?: string }) {
   const [walk, setWalk] = useState<SafeWalk | null>(null)
+  const identity = useIdentity()
   const [destination, setDestination] = useState('')
   const [minutes, setMinutes] = useState<number>(10)
   const [now, setNow] = useState(() => new Date())
@@ -77,6 +79,8 @@ export function SafeWalkPanel({ presetDestination = '' }: { presetDestination?: 
     const started = await post({
       action: 'start',
       destination: destination.trim() || 'my destination',
+      walkerId: identity?.roll ?? null,
+      walkerName: identity?.name ?? null,
       expectedMinutes: minutes,
       origin,
     })

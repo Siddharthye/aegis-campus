@@ -194,10 +194,11 @@ export function Hero() {
         </div>
       </motion.nav>
 
+      <div className="relative z-10 flex flex-1 flex-col justify-center">
       {/* Copy plane left, live-ops capsule floating in the aurora right. */}
       <motion.div
         style={{ y: copyY, opacity: fade }}
-        className="relative z-10 mx-auto grid w-[min(1200px,calc(100%-2rem))] flex-1 content-center gap-10 py-10 xl:grid-cols-[1.35fr_auto] xl:items-center"
+        className="mx-auto grid w-[min(1200px,calc(100%-2rem))] gap-8 py-6 xl:grid-cols-[1.35fr_auto] xl:items-center xl:gap-12"
       >
         <motion.div style={parallax ? { x: copyDriftX, y: copyDriftY } : undefined}>
           <motion.p
@@ -212,7 +213,7 @@ export function Hero() {
 
           {/* The headline stands still until hovered — the letter swap is the
               only animation it ever performs. */}
-          <h1 className="mt-6 font-[family-name:var(--font-display)] text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
+          <h1 className="mt-5 font-[family-name:var(--font-display)] text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl xl:text-8xl">
             <RandomLetterSwap label="Every second," className="cursor-default" />
             {/* Solid accent, deliberately: background-clip text under the
                 swap's transformed letters makes Chromium paint the line twice. */}
@@ -241,7 +242,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.65, ease: EASE }}
-            className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4"
+            className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4"
           >
             <MagneticButton href="/control">Open Control Room →</MagneticButton>
             <MagneticButton href="/ai" variant="ghost">
@@ -298,7 +299,7 @@ export function Hero() {
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.9, ease: EASE }}
-        className="relative z-10 pb-24 sm:pb-8"
+        className="mt-8 pb-24 sm:mt-10 sm:pb-8"
         style={{ perspective: 1200 }}
         onPointerEnter={() => setHeld(true)}
         onPointerLeave={release}
@@ -405,6 +406,7 @@ export function Hero() {
           ))}
         </div>
       </motion.div>
+      </div>
     </section>
   )
 }

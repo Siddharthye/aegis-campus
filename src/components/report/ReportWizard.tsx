@@ -8,6 +8,7 @@ import { EvidencePicker } from './EvidencePicker'
 import { LocationStep } from './LocationStep'
 import { useOfflineQueue } from './use-offline-queue'
 import { CATEGORY_OPTIONS, suggestTitle } from './report-model'
+import { useIdentity } from '@/lib/identity'
 
 type Step = 'category' | 'location' | 'review'
 
@@ -34,6 +35,7 @@ export function ReportWizard({ presetLocation = null }: ReportWizardProps = {}) 
   const [location, setLocation] = useState<LocatedPosition | null>(presetLocation)
   const [description, setDescription] = useState('')
   const [anonymous, setAnonymous] = useState(false)
+  const identity = useIdentity()
   const [evidence, setEvidence] = useState<EvidenceItem[]>([])
   const [wantsCaseToken, setWantsCaseToken] = useState(true)
   const [submitted, setSubmitted] = useState<Incident | null>(null)
@@ -70,7 +72,8 @@ export function ReportWizard({ presetLocation = null }: ReportWizardProps = {}) 
       title: suggestTitle(category, location.label, description),
       description: description.trim() || 'No further detail given by the reporter.',
       location,
-      reporterId: anonymous ? null : 'student-2214',
+      reporterId: anonymous ? null : (identity?.roll ?? null),
+      reporterName: anonymous ? null : (identity?.name ?? null),
       evidence,
       wantsCaseToken,
     }
