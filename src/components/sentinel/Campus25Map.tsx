@@ -15,6 +15,13 @@ import {
 } from '@/data/campus25'
 import type { RiskPattern, RouteRisk } from '@/domain/risk-map'
 import type { SafeWalk } from '@/domain/safe-walk'
+import {
+  centroid,
+  line,
+  placeBlockLabels,
+  project,
+  type Projection,
+} from '@/domain/campus-projection'
 import { MapViewport } from '@/components/ui/MapViewport'
 
 /**
@@ -29,9 +36,6 @@ import { MapViewport } from '@/components/ui/MapViewport'
  * above the base so nothing important is ever competing with scenery.
  */
 
-const VIEW_WIDTH = 900
-const PADDING = 0.04
-
 const BLOCK_STYLE: Record<BlockKind, { fill: string; stroke: string; label: string }> = {
   academic: { fill: '#1b2b45', stroke: '#a78bfa', label: 'Academic block' },
   admin: { fill: '#232a38', stroke: '#94a3b8', label: 'Administration' },
@@ -39,114 +43,6 @@ const BLOCK_STYLE: Record<BlockKind, { fill: string; stroke: string; label: stri
   hostel: { fill: '#2d2a17', stroke: '#eab308', label: 'Hostel' },
   utility: { fill: '#1e242e', stroke: '#64748b', label: 'Utility / parking' },
 }
-
-interface Projection {
-  width: number
-  height: number
-  toXY(point: Point): { x: number; y: number }
-  /** Metres per SVG unit — lets the scale bar be honest. */
-  metresPerUnit: number
-}
-
-function project(points: readonly Point[], width = VIEW_WIDTH): Projection {
-  const lats = points.map((point) => point.lat)
-  const lngs = points.map((point) => point.lng)
-
-  const latSpanRaw = Math.max(...lats) - Math.min(...lats)
-  const lngSpanRaw = Math.max(...lngs) - Math.min(...lngs)
-  const minLat = Math.min(...lats) - latSpanRaw * PADDING
-  const maxLat = Math.max(...lats) + latSpanRaw * PADDING
-  const minLng = Math.min(...lngs) - lngSpanRaw * PADDING
-  const maxLng = Math.max(...lngs) + lngSpanRaw * PADDING
-
-  const cosLat = Math.cos(((minLat + maxLat) / 2) * (Math.PI / 180))
-  const lngSpan = (maxLng - minLng) * cosLat
-  const latSpan = maxLat - minLat
-  const height = Math.round(width * (latSpan / lngSpan))
-
-  return {
-    width,
-    height,
-    metresPerUnit: (lngSpan * 111_320) / width,
-    toXY: (point) => ({
-      x: ((point.lng - minLng) * cosLat * width) / lngSpan,
-      y: ((maxLat - point.lat) * height) / latSpan,
-    }),
-  }
-}
-
-/**
- * Block label layout.
- *
- * Half these buildings are narrower than their own names, so a label centred
- * on the footprint spills out over its neighbours — which is what made the map
- * look hand-drawn. A name that does not fit inside its building is moved
- * beneath it instead, and any two labels that still collide are pushed apart
- * vertically. The font is monospace, so the width of a name is simply its
- * length, which is the one thing that makes this measurable without rendering.
- */
-const LABEL_FONT_SIZE = 10.5
-/** JetBrains Mono advance width, as a fraction of the font size. */
-const LABEL_CHAR_RATIO = 0.6
-const LABEL_LINE_HEIGHT = 13.5
-/** Breathing room required inside a block for its name to sit there. */
-const LABEL_INSET = 8
-
-interface PlacedLabel {
-  id: string
-  name: string
-  x: number
-  y: number
-}
-
-function placeBlockLabels(plan: Projection): PlacedLabel[] {
-  const placed: PlacedLabel[] = []
-
-  for (const item of CAMPUS25_BLOCKS) {
-    const topLeft = plan.toXY(item.footprint[0])
-    const bottomRight = plan.toXY(item.footprint[2])
-    const width = Math.abs(bottomRight.x - topLeft.x)
-    const textWidth = item.name.length * LABEL_FONT_SIZE * LABEL_CHAR_RATIO
-
-    const centreX = (topLeft.x + bottomRight.x) / 2
-    const fits = textWidth + LABEL_INSET <= width
-
-    let y = fits
-      ? (topLeft.y + bottomRight.y) / 2 + LABEL_FONT_SIZE / 3
-      : Math.max(topLeft.y, bottomRight.y) + LABEL_LINE_HEIGHT
-
-    // Push down past anything already sitting where this wants to go. Blocks
-    // are laid out in a fixed order, so this is deterministic.
-    for (const other of placed) {
-      const apart = Math.abs(other.x - centreX)
-      const overlapWidth = (textWidth + other.name.length * LABEL_FONT_SIZE * LABEL_CHAR_RATIO) / 2
-      if (apart < overlapWidth && Math.abs(other.y - y) < LABEL_LINE_HEIGHT) {
-        y = other.y + LABEL_LINE_HEIGHT
-      }
-    }
-
-    placed.push({ id: item.id, name: item.name, x: centreX, y })
-  }
-
-  return placed
-}
-
-/** Where a name for an area belongs: the average of its corners. */
-function centroid(points: readonly Point[], plan: Projection) {
-  const projected = points.map((point) => plan.toXY(point))
-  return {
-    x: projected.reduce((sum, point) => sum + point.x, 0) / projected.length,
-    y: projected.reduce((sum, point) => sum + point.y, 0) / projected.length,
-  }
-}
-
-const line = (points: readonly Point[], plan: Projection) =>
-  points
-    .map((point) => {
-      const { x, y } = plan.toXY(point)
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
 
 interface Campus25MapProps {
   walks: readonly SafeWalk[]
