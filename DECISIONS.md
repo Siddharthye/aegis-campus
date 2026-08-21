@@ -46,6 +46,21 @@ kilobytes, hits 60fps on weak hardware, and — because it renders
 `src/data/campus.ts`, the same dataset the ATLAS map uses — the marketing hero
 literally renders the product's data.
 
+## Why do pages fetch through the API instead of reading the store?
+
+On Vercel, page rendering and route handlers are deployed as *separate*
+serverless functions. They therefore do not share the in-memory store: a
+server component that calls the service layer directly finds an empty store in
+production even though `/api/...` answers correctly for the same id. The drill
+after-action page hit exactly this and 404'd in production while passing
+locally, where one process holds everything.
+
+So pages read through the public HTTP API. That also keeps us honest — every
+screen consumes the same endpoints a buyer would integrate against, which is
+the dogfood test we apply to the sold modules. (With Upstash configured both
+paths share durable storage and either would work; the HTTP path is correct
+under both.)
+
 ## Why no OAuth?
 
 Roles (reporter / dispatcher / responder / admin) are demo-switchable
