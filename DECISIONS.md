@@ -72,8 +72,8 @@ matters in this domain, and that we did build.
 ## Why does location carry a confidence field?
 
 Because pretending GPS works indoors is how campus safety products fail.
-Every position records how it was obtained (QR anchor 99% / map tap 70% /
-GPS 40%) and the UI shows it honestly. Dispatchers make better decisions when
+Every position records how it was obtained (floor-plan pick 85% / map tap
+70% / GPS 40%) and the UI shows it honestly. Dispatchers make better decisions when
 the system admits what it doesn't know.
 
 ## Why are the sellable modules separate repos with duplicated helpers?
@@ -91,3 +91,40 @@ otherwise — same response shape, plus an `engine` field so the UI is honest
 about which answered. NEXBOT answers from the live store with no model at all.
 The demo must survive a venue with no wifi; anything less is a gamble we don't
 need to take.
+
+## Why was BEACON dropped for SIGHTLINE?
+
+BEACON's premise was printed QR anchors giving room-level location. It solved
+a real problem for a fire or a collapse, but for the case that actually drives
+a campus safety app — being followed at night — it asked the wrong thing of the
+wrong person: stop, find a poster, scan it. Nobody does that.
+
+SIGHTLINE answers the question a person actually has at 10pm: which way should
+I walk. Reports already arrive one at a time, each to the control room, so the
+place that keeps producing them stays invisible to the next person walking
+through it. `src/domain/risk-map.ts` clusters them by place and three-hour band
+and scores tonight's routes against the patterns live at that hour.
+
+Two rules matter more than the clustering:
+
+- **A pattern needs at least two distinct reporters.** One account filing four
+  reports about a place is not evidence about the place. Without this rule the
+  feature is a tool for rerouting strangers away from somewhere one person
+  dislikes. Anonymous reports still count as distinct people — anonymity must
+  not collapse six victims into one unreliable voice.
+- **Unlit routes carry a standing penalty even with nothing reported.** Nobody
+  files a report about a light that was already out, so absence of reports on a
+  dark path is not evidence of quiet. The UI labels these `Unlit`, not
+  `Some reports`, because the reason text beside it says no reports exist and
+  the two must not contradict each other.
+
+Nothing is ever called safe. The bands are Quiet, Unlit, Some reports, and
+Avoid if you can, and every route is listed — the shorter way is never hidden,
+because that choice belongs to the person walking.
+
+## Why isn't SIGHTLINE just a live location share?
+
+A live location share tells one trusted person where you are. It cannot tell
+you where not to go, because it has no access to what anyone else reported.
+SIGHTLINE's whole value is the part a phone-to-phone share structurally cannot
+do: aggregate across reporters who have never met.
