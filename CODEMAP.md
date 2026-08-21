@@ -26,6 +26,8 @@ They correspond one-to-one with the four ways campus emergency response fails.
 | Read | The decision it makes |
 | --- | --- |
 | [`src/domain/beacon.ts`](src/domain/beacon.ts) | **Where is it?** Derives the whole QR-anchor registry from campus footprints, and grades every location method honestly — QR anchor 99% with a floor, map tap 70%, raw GPS 40% and no floor at all. |
+| [`src/lib/intake-service.ts`](src/lib/intake-service.ts) | **Is it a duplicate?** Every report enters here. FUSION decides over HTTP when reachable; the local matcher decides when it is not. |
+| [`src/domain/report-matching.ts`](src/domain/report-matching.ts) | The offline matcher. Four hard vetoes before any scoring — note why co-location alone may never fuse. |
 | [`src/domain/corroboration.ts`](src/domain/corroboration.ts) | **Is it real, and how bad?** Turns "21 reports at 96% confidence" into an automatic P2 → P0 escalation. Escalation is one-way by design; the comment explains why. |
 | [`src/domain/queue.ts`](src/domain/queue.ts) | **What do I do first?** Ranks the dispatcher queue by *SLA pressure*, not arrival time or severity alone. The header comment explains why either of those alone starves someone. |
 | [`src/domain/dispatch.ts`](src/domain/dispatch.ts) | **Who do I send?** Right unit first, then nearest, with a fallback rule and a human-readable reason attached to every recommendation. |

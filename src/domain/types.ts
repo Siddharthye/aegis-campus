@@ -68,6 +68,11 @@ export interface Incident {
   timeline: TimelineEntry[]
   /** Photos attached by the reporter, already downscaled and EXIF-stripped. */
   evidence: EvidenceItem[]
+  /**
+   * The FUSION module's id for this incident, when FUSION founded it. Lets a
+   * later corroboration from FUSION resolve back to the AEGIS incident.
+   */
+  fusionIncidentId?: string
   /** True when this incident was produced by a drill scenario, not reality. */
   isDrill: boolean
   /**

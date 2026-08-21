@@ -25,6 +25,20 @@ const ESCALATION_THRESHOLDS: readonly { minReports: number; minConfidence: numbe
 ]
 
 /**
+ * The more urgent of two severities.
+ *
+ * Used when an external engine (the FUSION module) and our own corroboration
+ * rule disagree: we take whichever is more alarming rather than picking a
+ * winner, because under-alerting is the expensive error.
+ *
+ * @example
+ * moreUrgentSeverity('P2', 'P0') // => 'P0'
+ */
+export function moreUrgentSeverity(a: Severity, b: Severity): Severity {
+  return SEVERITY_LADDER.indexOf(a) >= SEVERITY_LADDER.indexOf(b) ? a : b
+}
+
+/**
  * The most urgent severity justified by this corroboration level, or the
  * current severity when nothing justifies a bump.
  *

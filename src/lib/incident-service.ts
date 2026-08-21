@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto'
-import { escalationRationale, severityFromCorroboration } from '@/domain/corroboration'
+import {
+  escalationRationale,
+  moreUrgentSeverity,
+  severityFromCorroboration,
+} from '@/domain/corroboration'
 import { recommendResponders, type DispatchRecommendation } from '@/domain/dispatch'
 import { readSla } from '@/domain/sla'
 import type { EvidenceItem } from '@/domain/evidence'
@@ -49,6 +53,8 @@ export interface CreateIncidentInput {
   reporterId: string | null
   isDrill?: boolean
   evidence?: EvidenceItem[]
+  /** Set when the FUSION module founded the incident this report opened. */
+  fusionIncidentId?: string
   /** SHA-256 of a VEIL case token, when the reporter wants to follow up. */
   caseTokenHash?: string
 }
@@ -86,6 +92,7 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
     timeline: [entry(input.reporterId ?? 'anonymous', 'reported', input.location.label)],
     evidence: input.evidence ?? [],
     isDrill: input.isDrill ?? false,
+    ...(input.fusionIncidentId ? { fusionIncidentId: input.fusionIncidentId } : {}),
     ...(input.caseTokenHash ? { caseTokenHash: input.caseTokenHash } : {}),
   }
 
@@ -332,5 +339,86 @@ export async function updateResponderLocation(
     responders.map((item) => (item.id === responderId ? updated : item)),
   )
   await store.appendEvent('responder.moved', { responderId, lat, lng })
+  return updated
+}
+
+/**
+ * Finds the AEGIS incident that the FUSION module knows by its own id.
+ *
+ * @example
+ * await findIncidentByFusionId('4f9a-12c0')
+ */
+export async function findIncidentByFusionId(fusionIncidentId: string): Promise<Incident | null> {
+  const incidents = await loadIncidents()
+  return incidents.find((incident) => incident.fusionIncidentId === fusionIncidentId) ?? null
+}
+
+/**
+ * Appends a timeline note without changing status — used to record things a
+ * dispatcher must see but that are not transitions, like a quarantine flag.
+ *
+ * @example
+ * await noteOnIncident(id, 'flagged', 'FUSION quarantined this report for review')
+ */
+export async function noteOnIncident(
+  incidentId: string,
+  action: string,
+  detail: string,
+  actor = 'system',
+): Promise<Incident | null> {
+  const incidents = await loadIncidents()
+  const incident = incidents.find((item) => item.id === incidentId)
+  if (!incident) return null
+
+  const updated: Incident = {
+    ...incident,
+    timeline: [...incident.timeline, entry(actor, action, detail)],
+  }
+
+  await store.writeCollection(
+    INCIDENTS,
+    incidents.map((item) => (item.id === incidentId ? updated : item)),
+  )
+  await store.appendEvent('incident.updated', updated)
+  return updated
+}
+
+/**
+ * Raises an incident's severity on an outside verdict — currently the FUSION
+ * module's own assessment of the cluster it fused.
+ *
+ * Escalation only: a specialist engine may tell us something is worse than we
+ * thought, never that it is safer. Anything else would let a module walk back
+ * a dispatcher's judgement.
+ *
+ * @example
+ * await escalateSeverity('inc-4f9a12c0', 'P0', 'FUSION assessed the fused cluster as P0')
+ */
+export async function escalateSeverity(
+  incidentId: string,
+  severity: Severity,
+  reason: string,
+): Promise<Incident | null> {
+  const incidents = await loadIncidents()
+  const incident = incidents.find((item) => item.id === incidentId)
+  if (!incident) return null
+
+  const raised = moreUrgentSeverity(incident.severity, severity)
+  if (raised === incident.severity) return incident
+
+  const updated: Incident = {
+    ...incident,
+    severity: raised,
+    timeline: [
+      ...incident.timeline,
+      entry('system', 'escalated', `${incident.severity} → ${raised} — ${reason}`),
+    ],
+  }
+
+  await store.writeCollection(
+    INCIDENTS,
+    incidents.map((item) => (item.id === incidentId ? updated : item)),
+  )
+  await store.appendEvent('incident.updated', updated)
   return updated
 }
