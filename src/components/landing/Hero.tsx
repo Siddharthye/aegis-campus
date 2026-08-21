@@ -1,12 +1,17 @@
 'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { RandomLetterSwap } from '@/components/ui/RandomLetterSwap'
 import { MagneticButton } from './MagneticButton'
 
 const EASE = [0.22, 1, 0.36, 1] as const
+
+const SUPPORT_WORDS =
+  'One platform from the first report to the last responder standing down — built for a campus, honest about what it knows.'.split(
+    ' ',
+  )
 
 /** Seconds a slide holds before the carousel advances on its own. */
 const AUTOPLAY_MS = 4500
@@ -166,24 +171,48 @@ export function Hero() {
           Campus Emergency Response OS
         </motion.p>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 22, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.9, delay: 0.45, ease: EASE }}
-          className="mt-6 font-[family-name:var(--font-display)] text-5xl font-bold tracking-tight sm:text-6xl xl:text-7xl"
-        >
-          <RandomLetterSwap label="Every second," className="cursor-default" />
-          <RandomLetterSwap label="accounted for." className="cursor-default text-ops-accent" />
-        </motion.h1>
+        {/* Line-by-line reveal on arrival; the letter swap only ever runs
+            under the cursor, never on its own. */}
+        <h1 className="mt-6 font-[family-name:var(--font-display)] text-5xl font-bold tracking-tight sm:text-6xl xl:text-7xl">
+          {(
+            [
+              { label: 'Every second,', accent: false },
+              { label: 'accounted for.', accent: true },
+            ] as const
+          ).map((line, index) => (
+            <span key={line.label} className="block overflow-hidden">
+              <motion.span
+                initial={{ y: '110%', opacity: 0, filter: 'blur(8px)' }}
+                animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 0.9, delay: 0.45 + index * 0.12, ease: EASE }}
+                className="block"
+              >
+                <RandomLetterSwap
+                  label={line.label}
+                  className={`cursor-default ${line.accent ? 'text-ops-accent' : ''}`}
+                />
+              </motion.span>
+            </span>
+          ))}
+        </h1>
 
+        {/* The support line brightens word by word as scrolling begins,
+            then rides the section's fade out with everything else. */}
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.65, ease: EASE }}
-          className="mt-5 max-w-xl text-[15px] leading-relaxed text-ops-muted sm:text-base"
+          className="mt-5 flex max-w-xl flex-wrap gap-x-[0.3em] text-[15px] leading-relaxed sm:text-base"
         >
-          One platform from the first report to the last responder standing down —
-          built for a campus, honest about what it knows.
+          {SUPPORT_WORDS.map((word, index) => (
+            <SupportWord
+              key={`${word}-${index}`}
+              word={word}
+              index={index}
+              total={SUPPORT_WORDS.length}
+              progress={scrollYProgress}
+            />
+          ))}
         </motion.p>
 
         <motion.div
@@ -252,6 +281,36 @@ export function Hero() {
         </div>
       </motion.div>
     </section>
+  )
+}
+
+/**
+ * One word of the hero's support line. Dim at rest; sharpens to full text
+ * colour across the first quarter of the hero's scroll, in reading order —
+ * the same reveal the closing statement uses, tuned for a line this short.
+ */
+function SupportWord({
+  word,
+  index,
+  total,
+  progress,
+}: {
+  word: string
+  index: number
+  total: number
+  progress: MotionValue<number>
+}) {
+  const start = 0.02 + (index / total) * 0.22
+  const color = useTransform(
+    progress,
+    [start, start + 0.22 / total + 0.04],
+    ['var(--color-ops-faint)', 'var(--color-ops-text)'],
+  )
+
+  return (
+    <motion.span style={{ color }} className="inline-block">
+      {word}
+    </motion.span>
   )
 }
 

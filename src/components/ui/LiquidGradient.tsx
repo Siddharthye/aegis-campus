@@ -29,7 +29,7 @@ interface TrailPoint {
 /** Cursor trail rendered to a small canvas the shader samples for ripples. */
 class TouchTexture {
   private readonly size = 64
-  private readonly maxAge = 64
+  private readonly maxAge = 96
   private readonly radius = 0.1
   private readonly speed = 1 / 64
   private trail: TrailPoint[] = []
@@ -74,7 +74,7 @@ class TouchTexture {
       const distance = Math.sqrt(dx * dx + dy * dy)
       vx = dx / distance
       vy = dy / distance
-      force = Math.min((dx * dx + dy * dy) * 20000, 2)
+      force = Math.min((dx * dx + dy * dy) * 12000, 1.2)
     }
     this.last = { x: point.x, y: point.y }
     this.trail.push({ x: point.x, y: point.y, age: 0, force, vx, vy })
@@ -163,10 +163,10 @@ vec3 getGradientColor(vec2 uv, float time) {
 void main() {
   vec2 uv = vUv;
   vec4 touchTex = texture2D(uTouchTexture, uv);
-  uv.x -= (touchTex.r * 2.0 - 1.0) * 0.8 * touchTex.b;
-  uv.y -= (touchTex.g * 2.0 - 1.0) * 0.8 * touchTex.b;
+  uv.x -= (touchTex.r * 2.0 - 1.0) * 0.45 * touchTex.b;
+  uv.y -= (touchTex.g * 2.0 - 1.0) * 0.45 * touchTex.b;
   float dist = length(uv - vec2(0.5));
-  float ripple = sin(dist * 20.0 - uTime * 3.0) * 0.04 * touchTex.b;
+  float ripple = sin(dist * 14.0 - uTime * 2.2) * 0.03 * touchTex.b;
   uv += vec2(ripple);
   vec3 color = getGradientColor(uv, uTime);
   color += grain(uv, uTime) * uGrainIntensity;
@@ -186,6 +186,10 @@ class GradientApp {
   private animationId: number | null = null
   private paused = false
   private readonly disposers: Array<() => void> = []
+  /** Raw pointer target and its eased follower — the trail samples the
+      follower every frame, so fast flicks become curves, not stutters. */
+  private pointerTarget: { x: number; y: number } | null = null
+  private pointerEased: { x: number; y: number } | null = null
 
   constructor(private readonly container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
@@ -261,15 +265,19 @@ class GradientApp {
     // window and projected into the fixed full-viewport container.
     const onPointerMove = (event: PointerEvent) => {
       if (this.paused) return
-      this.touchTexture.addTouch({
+      this.pointerTarget = {
         x: event.clientX / container.clientWidth,
         y: 1 - event.clientY / container.clientHeight,
-      })
+      }
     }
     window.addEventListener('pointermove', onPointerMove, { passive: true })
     this.disposers.push(() => window.removeEventListener('pointermove', onPointerMove))
 
+    // A ResizeObserver rather than the window resize event: while a route
+    // transition animates an ancestor, this fixed container is temporarily
+    // re-anchored and mis-sized, and only the observer sees it snap back.
     const onResize = () => {
+      if (container.clientWidth === 0 || container.clientHeight === 0) return
       this.camera.aspect = container.clientWidth / container.clientHeight
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(container.clientWidth, container.clientHeight)
@@ -281,8 +289,9 @@ class GradientApp {
       const resolution = this.uniforms.uResolution.value as THREE.Vector2
       resolution.set(container.clientWidth, container.clientHeight)
     }
-    window.addEventListener('resize', onResize)
-    this.disposers.push(() => window.removeEventListener('resize', onResize))
+    const sizeObserver = new ResizeObserver(onResize)
+    sizeObserver.observe(container)
+    this.disposers.push(() => sizeObserver.disconnect())
 
     // A hidden tab must cost nothing.
     const onVisibility = () => this.setPaused(document.hidden)
@@ -301,6 +310,16 @@ class GradientApp {
     if (!this.paused) {
       const delta = Math.min(this.clock.getDelta(), 0.1)
       this.uniforms.uTime.value += delta
+
+      // Ease the follower toward the pointer and sample it once per frame.
+      if (this.pointerTarget) {
+        const eased = this.pointerEased ?? { ...this.pointerTarget }
+        eased.x += (this.pointerTarget.x - eased.x) * 0.14
+        eased.y += (this.pointerTarget.y - eased.y) * 0.14
+        this.pointerEased = eased
+        this.touchTexture.addTouch({ x: eased.x, y: eased.y })
+      }
+
       this.touchTexture.update()
       this.renderer.render(this.scene, this.camera)
     } else {

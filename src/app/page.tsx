@@ -7,6 +7,7 @@ import { Manifesto } from '@/components/landing/Manifesto'
 import { ModuleGrid } from '@/components/landing/ModuleGrid'
 import { NexbotShowcase } from '@/components/landing/NexbotShowcase'
 import { SmoothScroll } from '@/components/landing/SmoothScroll'
+import { CustomCursor } from '@/components/ui/CustomCursor'
 import { LiquidGradient } from '@/components/ui/LiquidGradient'
 
 /**
@@ -23,6 +24,7 @@ export default function LandingPage() {
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 opacity-60">
         <LiquidGradient className="h-full w-full" />
       </div>
+      <CustomCursor />
       <main className="relative z-10">
         <Hero />
         <CapabilityStrip />

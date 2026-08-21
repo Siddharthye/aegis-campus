@@ -133,6 +133,16 @@ body {
   display: none;
 }
 
+/* While the landing's custom cursor is mounted it owns the pointer; the
+   class comes and goes with the component, so ops screens never lose their
+   native crosshairs and grab cursors. */
+@media (pointer: fine) {
+  .native-cursor-off,
+  .native-cursor-off * {
+    cursor: none !important;
+  }
+}
+
 /* ── Print ──────────────────────────────────────────────────────────────── */
 
 /* Compliance artifacts are printed or saved as PDF by the browser itself, so

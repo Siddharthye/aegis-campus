@@ -1,6 +1,6 @@
 'use client'
 
-import { formatTime, useLiveClock } from './use-live-clock'
+import { formatDate, formatTime, useLiveClock } from './use-live-clock'
 
 /**
  * The reader's own clock, ticking, in the header of every ops screen.
@@ -20,11 +20,12 @@ export function LiveClock() {
     >
       <span className="siren-pulse size-1.5 rounded-full bg-emerald-400" />
       <time
-        className="font-mono tabular-nums text-ops-text"
+        className="flex items-baseline gap-2 font-mono tabular-nums"
         dateTime={now?.toISOString()}
         suppressHydrationWarning
       >
-        {formatTime(now)}
+        <span className="text-ops-faint">{formatDate(now)}</span>
+        <span className="text-ops-text">{formatTime(now)}</span>
       </time>
     </span>
   )

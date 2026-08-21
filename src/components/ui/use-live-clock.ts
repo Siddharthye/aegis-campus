@@ -45,3 +45,12 @@ export function formatTime(now: Date | null): string {
   if (!now) return '--:--:--'
   return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
+
+/**
+ * `Thu 21 Aug` in the reader's own timezone — the calendar half of the
+ * header clock. Placeholder dashes before the clock is known.
+ */
+export function formatDate(now: Date | null): string {
+  if (!now) return '--- -- ---'
+  return now.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })
+}
