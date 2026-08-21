@@ -29,7 +29,11 @@ export function SafeWalkWorkspace() {
     routes: RouteRisk[]
   } | null>(null)
   const [pickedDestination, setPickedDestination] = useState('')
-  const hour = now.getHours()
+  // Derived from the ticking clock rather than read during rendering: the
+  // server runs in UTC and the reader is in IST, so an hour computed while
+  // rendering disagrees with itself across hydration.
+  const [hour, setHour] = useState<number | null>(null)
+  useEffect(() => setHour(now.getHours()), [now])
 
   const refresh = useCallback(async () => {
     const response = await fetch('/api/safe-walk')
@@ -40,6 +44,8 @@ export function SafeWalkWorkspace() {
 
   // Risk is re-scored per hour, not per second — patterns are hour-banded.
   useEffect(() => {
+    if (hour === null) return
+
     void fetch(`/api/risk?hour=${hour}`)
       .then(
         (response) =>
@@ -223,7 +229,9 @@ export function SafeWalkWorkspace() {
         <Panel
           label="Which way to walk"
           tone={risk && risk.routes[0] && risk.routes[0].risk >= 0.55 ? 'danger' : 'accent'}
-          aside={<Chip tone="accent">{String(hour).padStart(2, '0')}:00</Chip>}
+          aside={
+            <Chip tone="accent">{hour === null ? '—' : `${String(hour).padStart(2, '0')}:00`}</Chip>
+          }
         >
           {!risk ? (
             <p className="px-4 py-5 text-[12px] text-ops-muted">Reading the incident history…</p>
