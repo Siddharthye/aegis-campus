@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   CHECK_IN_INTERVAL_MS,
   missedCheckIns,

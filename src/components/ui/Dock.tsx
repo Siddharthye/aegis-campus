@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NexbotAvatar } from '@/components/nexbot/NexbotAvatar'
 
 /**
@@ -41,6 +41,12 @@ const TILE_REST_PX = 44
 const TILE_PEAK_PX = 76
 const MAGNIFY_RADIUS_PX = 150
 
+/**
+ * Phones get a smaller tile. At the desktop size the dock measured 446px —
+ * wider than any phone — so it bled off both edges of the screen.
+ */
+const TILE_COMPACT_PX = 40
+
 type DockEntry =
   | { kind: 'link'; href: string; label: string; icon: React.ReactNode; desktopOnly?: boolean }
   | { kind: 'nexbot'; href: string; label: string }
@@ -56,8 +62,8 @@ const ENTRIES: DockEntry[] = [
   { kind: 'link', href: '/safe-walk', label: 'Safe Walk', icon: <Footprints className={ICON} /> },
   { kind: 'link', href: '/sightline', label: 'SIGHTLINE', icon: <Eye className={ICON} /> },
   { kind: 'link', href: '/control', label: 'Control', icon: <Radar className={ICON} /> },
-  { kind: 'link', href: '/respond', label: 'Respond', icon: <Navigation className={ICON} /> },
-  { kind: 'link', href: '/analytics', label: 'Analytics', icon: <Activity className={ICON} /> },
+  { kind: 'link', href: '/respond', label: 'Respond', icon: <Navigation className={ICON} />, desktopOnly: true },
+  { kind: 'link', href: '/analytics', label: 'Analytics', icon: <Activity className={ICON} />, desktopOnly: true },
   { kind: 'gap' },
   {
     kind: 'link',
@@ -92,7 +98,7 @@ export function Dock() {
       <motion.div
         onMouseMove={(event) => mouseX.set(event.clientX)}
         onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
-        className="glass-chrome pointer-events-auto flex items-end gap-1 rounded-2xl px-2 pb-1.5 pt-1.5"
+        className="glass-chrome pointer-events-auto flex items-end gap-0.5 rounded-2xl px-1.5 pb-1.5 pt-1.5 sm:gap-1 sm:px-2"
       >
         {ENTRIES.map((entry, index) => {
           if (entry.kind === 'gap') {
@@ -168,13 +174,24 @@ function DockTile({
     return x - bounds.x - bounds.width / 2
   })
 
+  /* Measured after mount so the server and the browser agree on markup. */
+  const [compact, setCompact] = useState(false)
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 639px)')
+    const sync = () => setCompact(query.matches)
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [])
+
+  const rest = compact ? TILE_COMPACT_PX : TILE_REST_PX
   const sizeTarget = useTransform(
     distance,
     [-MAGNIFY_RADIUS_PX, 0, MAGNIFY_RADIUS_PX],
-    [TILE_REST_PX, TILE_PEAK_PX, TILE_REST_PX],
+    [rest, compact ? rest : TILE_PEAK_PX, rest],
   )
   const size = useSpring(sizeTarget, { mass: 0.1, stiffness: 220, damping: 16 })
-  const iconScale = useTransform(size, (value) => value / TILE_REST_PX)
+  const iconScale = useTransform(size, (value) => value / rest)
 
   const tile = (
     <motion.div
