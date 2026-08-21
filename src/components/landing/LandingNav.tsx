@@ -6,8 +6,9 @@ import Link from 'next/link'
 const LINKS = [
   { href: '/report', label: 'Report' },
   { href: '/control', label: 'Control Room' },
-  { href: '/respond', label: 'Respond' },
   { href: '/analytics', label: 'Analytics' },
+  { href: '/case', label: 'Check a case' },
+  { href: '/wanted', label: 'Wanted' },
 ]
 
 /**
@@ -30,12 +31,26 @@ export function LandingNav() {
           <span className="font-mono text-sm font-bold tracking-widest">AEGIS</span>
         </Link>
 
-        <div className="hidden items-center gap-1 sm:flex">
+        <div className="hidden items-center gap-1 md:flex">
           {LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className="rounded-full px-3.5 py-1.5 text-[13px] font-medium text-ops-muted transition-colors hover:bg-ops-panel hover:text-ops-text"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Below md the full row would wrap into the logo, so the two links a
+            student actually needs stay and the rest live in the console. */}
+        <div className="flex items-center gap-1 md:hidden">
+          {LINKS.slice(0, 1).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-full px-3 py-1.5 text-[13px] font-medium text-ops-muted transition-colors hover:text-ops-text"
             >
               {link.label}
             </Link>

@@ -8,14 +8,19 @@ const COLUMNS = [
       { href: '/control', label: 'Control room' },
       { href: '/respond', label: 'Responder view' },
       { href: '/analytics', label: 'PULSE analytics' },
+      { href: '/beacon', label: 'BEACON anchor sheets' },
+      { href: '/case', label: 'Check a case' },
     ],
   },
   {
+    // Repo links, not localhost: a footer on a deployed site must not point at
+    // a port only the developer has running.
     title: 'Modules for sale',
     links: [
-      { href: 'http://localhost:4101', label: 'SIREN — alerts' },
-      { href: 'http://localhost:4102', label: 'ATLAS — map + triage' },
-      { href: 'http://localhost:4104', label: 'FUSION — report fusion' },
+      { href: 'https://github.com/Siddharthye/siren-alerts', label: 'SIREN — alerts' },
+      { href: 'https://github.com/Siddharthye/atlas-incident-map', label: 'ATLAS — map + triage' },
+      { href: 'https://github.com/Siddharthye/fusion-reports', label: 'FUSION — report fusion' },
+      { href: '/wanted', label: 'What we will buy' },
     ],
   },
 ]

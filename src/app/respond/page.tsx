@@ -7,7 +7,6 @@ export const metadata = { title: 'Respond — AEGIS' }
 export default function RespondPage() {
   return (
     <OpsShell
-      active="/respond"
       title="My assignment"
       subtitle="Every status change is timestamped and attributed to you."
     >

@@ -11,7 +11,6 @@ export const metadata = { title: 'Check a case — AEGIS' }
 export default function CasePage() {
   return (
     <OpsShell
-      active="/report"
       title="Check a case"
       subtitle="Enter the token you were given when you reported. No account, no name."
     >

@@ -1,16 +1,8 @@
 import Link from 'next/link'
 import { Nexbot } from '@/components/nexbot/Nexbot'
-
-const SEATS = [
-  { href: '/report', label: 'Report' },
-  { href: '/control', label: 'Control' },
-  { href: '/respond', label: 'Respond' },
-  { href: '/analytics', label: 'Analytics' },
-]
+import { OpsNav } from './OpsNav'
 
 interface OpsShellProps {
-  /** Which seat this screen belongs to — highlights the tab. */
-  active: '/report' | '/control' | '/respond' | '/analytics'
   title: string
   subtitle?: string
   /** Right-aligned header extras (live clocks, action buttons). */
@@ -22,7 +14,7 @@ interface OpsShellProps {
  * The chrome every ops screen shares: brand, seat tabs, live badge, NEXBOT.
  * Screens supply only their content — consistency comes free.
  */
-export function OpsShell({ active, title, subtitle, actions, children }: OpsShellProps) {
+export function OpsShell({ title, subtitle, actions, children }: OpsShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-ops-bg">
       <header className="sticky top-0 z-40 border-b border-ops-border bg-ops-deep/85 backdrop-blur-md">
@@ -31,23 +23,9 @@ export function OpsShell({ active, title, subtitle, actions, children }: OpsShel
             <span className="font-mono text-sm font-bold tracking-widest text-ops-text">AEGIS</span>
           </Link>
 
-          <nav className="flex items-center gap-1">
-            {SEATS.map((seat) => (
-              <Link
-                key={seat.href}
-                href={seat.href}
-                className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                  seat.href === active
-                    ? 'bg-ops-accent/15 text-ops-accent'
-                    : 'text-ops-muted hover:bg-ops-panel hover:text-ops-text'
-                }`}
-              >
-                {seat.label}
-              </Link>
-            ))}
-          </nav>
+          <OpsNav />
 
-          <span className="ml-auto flex items-center gap-1.5 text-[10px] text-emerald-400">
+          <span className="ml-auto hidden shrink-0 items-center gap-1.5 text-[10px] text-emerald-400 sm:flex">
             <span className="siren-pulse size-1.5 rounded-full bg-current" /> LIVE
           </span>
           {actions}

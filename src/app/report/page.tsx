@@ -14,7 +14,6 @@ export const metadata = { title: 'Report — AEGIS' }
 export default function ReportPage() {
   return (
     <OpsShell
-      active="/report"
       title="Report an emergency"
       subtitle="Three taps. Triple-tap anywhere on this screen to arm a silent alarm instead."
     >

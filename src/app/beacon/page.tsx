@@ -12,7 +12,6 @@ export const metadata = { title: 'BEACON Anchors — AEGIS' }
 export default function BeaconPage() {
   return (
     <OpsShell
-      active="/analytics"
       title="BEACON anchors"
       subtitle="Print these, tape them to stairwells and corridors. Scanning one locates a report to the floor."
     >

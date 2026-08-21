@@ -8,7 +8,6 @@ export const metadata = { title: 'PULSE Analytics — AEGIS' }
 export default function AnalyticsPage() {
   return (
     <OpsShell
-      active="/analytics"
       title="PULSE"
       subtitle="Patterns that end in an instruction — where to patrol, and when."
     >

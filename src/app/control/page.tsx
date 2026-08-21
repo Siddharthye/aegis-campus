@@ -10,7 +10,6 @@ export const metadata = { title: 'Control Room — AEGIS' }
 export default function ControlPage() {
   return (
     <OpsShell
-      active="/control"
       title="Control Room"
       subtitle="Ranked by SLA pressure — the clock decides the order, not arrival time."
     >
