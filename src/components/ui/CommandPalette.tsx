@@ -31,7 +31,7 @@ const PAGES: PaletteAction[] = [
   { id: 'control', title: 'Control Room', hint: 'Dispatcher', keywords: 'queue dispatch drill broadcast', href: '/control' },
   { id: 'respond', title: 'My assignment', hint: 'Responder', keywords: 'respond eta', href: '/respond' },
   { id: 'analytics', title: 'PULSE analytics', hint: 'Admin', keywords: 'heatmap patrol sla hotspots', href: '/analytics' },
-  { id: 'sightline', title: 'SIGHTLINE risk routing', hint: 'Reporter', keywords: 'safe route night pattern harassment avoid', href: '/safe-walk' },
+  { id: 'sightline', title: 'SIGHTLINE risk map', hint: 'Reporter', keywords: 'safe route night pattern harassment avoid risk hour', href: '/sightline' },
   { id: 'case', title: 'Check a case', hint: 'VEIL', keywords: 'token anonymous follow up', href: '/case' },
   { id: 'ai', title: 'NEXBOT console', hint: 'AI copilot', keywords: 'ai chat assistant robot', href: '/ai' },
 ]

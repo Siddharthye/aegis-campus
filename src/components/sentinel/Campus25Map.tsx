@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   CAMPUS25_BLOCKS,
   CAMPUS25_BOUNDARY,
@@ -98,9 +98,24 @@ interface Campus25MapProps {
   patterns?: readonly RiskPattern[]
   /** Ranked routes; the safest is drawn emphasised. */
   routes?: readonly RouteRisk[]
+  /** Called when a block or gate is clicked. Omit to leave the map read-only. */
+  onPickDestination?: (destination: string) => void
 }
 
-export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapProps) {
+/** What the inspector is currently describing. */
+interface Focus {
+  title: string
+  detail: string
+  tone: 'good' | 'warn' | 'danger' | 'neutral'
+}
+
+export function Campus25Map({
+  walks,
+  patterns = [],
+  routes = [],
+  onPickDestination,
+}: Campus25MapProps) {
+  const [focus, setFocus] = useState<Focus | null>(null)
   const plan = useMemo(() => {
     const framing = [
       ...CAMPUS25_BOUNDARY,
@@ -115,6 +130,13 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
   const trails = walks.filter((walk) => walk.status === 'walking' || walk.status === 'escalated')
   const safestId = routes[0]?.route.id ?? null
   const riskById = new Map(routes.map((entry) => [entry.route.id, entry.risk]))
+  const scoredById = new Map(routes.map((entry) => [entry.route.id, entry]))
+
+  /** Every hoverable feature reports through here, so only one can be active. */
+  const describe = (next: Focus | null) => () => setFocus(next)
+
+  const pick = (destination: string) => () => onPickDestination?.(destination)
+  const pickable = onPickDestination !== undefined
 
   /** A 100m bar, rounded to the nearest sensible round number. */
   const scaleUnits = 100 / plan.metresPerUnit
@@ -141,7 +163,13 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
             </linearGradient>
             {/* Buildings get a soft drop so the cluster reads as raised. */}
             <filter id="block-lift" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" floodColor="#05070d" floodOpacity="0.75" />
+              <feDropShadow
+                dx="0"
+                dy="2.5"
+                stdDeviation="2.5"
+                floodColor="#05070d"
+                floodOpacity="0.75"
+              />
             </filter>
             <filter id="risk-blur" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="14" />
@@ -172,6 +200,7 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
                     fill: water ? '#7dd3fc' : '#86efac',
                     fontFamily: 'var(--font-inter), sans-serif',
                     letterSpacing: '0.02em',
+                    pointerEvents: 'none',
                     paintOrder: 'stroke',
                     stroke: '#05070d',
                     strokeWidth: 3,
@@ -185,8 +214,22 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
           })}
 
           {/* ── Roads: casing then surface, the way a road reads ─────────── */}
-          <polyline points={line(CAMPUS25_RING_ROAD, plan)} fill="none" stroke="#0a0e17" strokeWidth={11} strokeLinejoin="round" strokeLinecap="round" />
-          <polyline points={line(CAMPUS25_RING_ROAD, plan)} fill="none" stroke="#2b3444" strokeWidth={7} strokeLinejoin="round" strokeLinecap="round" />
+          <polyline
+            points={line(CAMPUS25_RING_ROAD, plan)}
+            fill="none"
+            stroke="#0a0e17"
+            strokeWidth={11}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          <polyline
+            points={line(CAMPUS25_RING_ROAD, plan)}
+            fill="none"
+            stroke="#2b3444"
+            strokeWidth={7}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
 
           {/* ── Campus boundary ─────────────────────────────────────────── */}
           <polygon
@@ -216,26 +259,86 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
             })}
           </g>
 
+          {/* Hit targets for the blooms above: a blurred shape is a poor
+              hover target, so each pattern gets a crisp invisible circle. */}
+          {patterns.map((pattern) => {
+            const { x, y } = plan.toXY(pattern.centre)
+            return (
+              <circle
+                key={`${pattern.id}-hit`}
+                cx={x}
+                cy={y}
+                r={26 + pattern.weight * 26}
+                fill="transparent"
+                className="cursor-help"
+                onMouseEnter={describe({
+                  title: pattern.headline,
+                  detail: `${pattern.category} reports from ${pattern.distinctReporters} different people. One person reporting repeatedly would not appear here.`,
+                  tone: 'danger',
+                })}
+                onMouseLeave={describe(null)}
+              />
+            )
+          })}
+
           {/* ── Walking routes, weighted by how safe they scored ─────────── */}
           {CAMPUS25_ROUTES.map((route) => {
             const risk = riskById.get(route.id)
             const safest = route.id === safestId
-            const stroke = risk === undefined
-              ? route.lit ? '#10b981' : '#f97316'
-              : risk < 0.2 ? '#10b981' : risk < 0.55 ? '#eab308' : '#ef4444'
+            const stroke =
+              risk === undefined
+                ? route.lit
+                  ? '#10b981'
+                  : '#f97316'
+                : risk < 0.2
+                  ? '#10b981'
+                  : risk < 0.55
+                    ? '#eab308'
+                    : '#ef4444'
+
+            const scored = scoredById.get(route.id)
+            const active = focus?.title === route.name
 
             return (
               <g key={route.id}>
-                <polyline points={line(route.path, plan)} fill="none" stroke="#05070d" strokeWidth={safest ? 9 : 7} strokeLinecap="round" strokeLinejoin="round" />
+                <polyline
+                  points={line(route.path, plan)}
+                  fill="none"
+                  stroke="#05070d"
+                  strokeWidth={safest ? 9 : 7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
                 <polyline
                   points={line(route.path, plan)}
                   fill="none"
                   stroke={stroke}
-                  strokeOpacity={safest ? 0.95 : 0.6}
-                  strokeWidth={safest ? 5 : 3.2}
+                  strokeOpacity={active ? 1 : safest ? 0.95 : 0.6}
+                  strokeWidth={active ? (safest ? 7 : 5.5) : safest ? 5 : 3.2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeDasharray={route.lit ? undefined : '9 6'}
+                />
+                {/* A 3px line is not something anyone can reliably point at. */}
+                <polyline
+                  points={line(route.path, plan)}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={18}
+                  strokeLinecap="round"
+                  className="cursor-help"
+                  onMouseEnter={describe({
+                    title: route.name,
+                    detail: scored?.reason ?? (route.lit ? 'A lit route.' : 'This route is unlit.'),
+                    tone: !scored
+                      ? 'neutral'
+                      : scored.risk < 0.2
+                        ? 'good'
+                        : scored.risk < 0.55
+                          ? 'warn'
+                          : 'danger',
+                  })}
+                  onMouseLeave={describe(null)}
                 />
               </g>
             )
@@ -245,14 +348,33 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
           <g filter="url(#block-lift)">
             {CAMPUS25_BLOCKS.map((item) => {
               const style = BLOCK_STYLE[item.kind]
+              const active = focus?.title === item.name
               return (
                 <polygon
                   key={item.id}
                   points={line(item.footprint, plan)}
-                  fill={style.fill}
+                  fill={active ? style.stroke : style.fill}
+                  fillOpacity={active ? 0.35 : 1}
                   stroke={style.stroke}
-                  strokeOpacity={0.55}
-                  strokeWidth={1.2}
+                  strokeOpacity={active ? 1 : 0.55}
+                  strokeWidth={active ? 2 : 1.2}
+                  role={pickable ? 'button' : undefined}
+                  tabIndex={pickable ? 0 : undefined}
+                  aria-label={pickable ? `Walk to ${item.name}` : undefined}
+                  className={pickable ? 'cursor-pointer' : undefined}
+                  onMouseEnter={describe({
+                    title: item.name,
+                    detail: pickable ? `${style.label}. Click to walk here.` : style.label,
+                    tone: 'neutral',
+                  })}
+                  onMouseLeave={describe(null)}
+                  onClick={pick(item.name)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onPickDestination?.(item.name)
+                    }
+                  }}
                 />
               )
             })}
@@ -273,6 +395,7 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
                   fill: '#e2e8f0',
                   fontFamily: 'var(--font-jetbrains), monospace',
                   fontWeight: 700,
+                  pointerEvents: 'none',
                   paintOrder: 'stroke',
                   stroke: '#05070d',
                   strokeWidth: 3,
@@ -315,8 +438,23 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
             const { x, y } = plan.toXY(muster.position)
             return (
               <g key={muster.id}>
-                <circle cx={x} cy={y} r={14} fill="#10b981" fillOpacity={0.12} stroke="#10b981" strokeOpacity={0.5} />
-                <path d={`M ${x - 4} ${y} l 3 3 l 5 -6`} fill="none" stroke="#34d399" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={14}
+                  fill="#10b981"
+                  fillOpacity={0.12}
+                  stroke="#10b981"
+                  strokeOpacity={0.5}
+                />
+                <path
+                  d={`M ${x - 4} ${y} l 3 3 l 5 -6`}
+                  fill="none"
+                  stroke="#34d399"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
                 <title>{`Muster point — ${muster.name}`}</title>
               </g>
             )
@@ -326,8 +464,38 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
           {CAMPUS25_GATES.map((gate) => {
             const { x, y } = plan.toXY(gate.position)
             return (
-              <g key={gate.id}>
-                <rect x={x - 7} y={y - 7} width={14} height={14} rx={3.5} fill="#0a1a28" stroke="#38bdf8" strokeWidth={1.6} />
+              <g
+                key={gate.id}
+                role={pickable ? 'button' : undefined}
+                tabIndex={pickable ? 0 : undefined}
+                aria-label={pickable ? `Walk to ${gate.name}` : undefined}
+                className={pickable ? 'cursor-pointer' : undefined}
+                onMouseEnter={describe({
+                  title: gate.name,
+                  detail: pickable
+                    ? `Towards ${gate.towards}. Click to walk here.`
+                    : `Towards ${gate.towards}.`,
+                  tone: 'neutral',
+                })}
+                onMouseLeave={describe(null)}
+                onClick={pick(gate.name)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onPickDestination?.(gate.name)
+                  }
+                }}
+              >
+                <rect
+                  x={x - 7}
+                  y={y - 7}
+                  width={14}
+                  height={14}
+                  rx={3.5}
+                  fill="#0a1a28"
+                  stroke="#38bdf8"
+                  strokeWidth={focus?.title === gate.name ? 2.6 : 1.6}
+                />
                 <rect x={x - 2.5} y={y - 2.5} width={5} height={5} rx={1} fill="#38bdf8" />
                 <text
                   x={x}
@@ -337,6 +505,7 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
                     fontSize: 10,
                     fill: '#7dd3fc',
                     fontFamily: 'var(--font-jetbrains), monospace',
+                    pointerEvents: 'none',
                     paintOrder: 'stroke',
                     stroke: '#05070d',
                     strokeWidth: 3,
@@ -367,8 +536,20 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
                     strokeDasharray="6 4"
                   />
                 )}
-                <circle cx={last.x} cy={last.y} r={11} fill={danger ? '#ef4444' : '#38bdf8'} fillOpacity={0.18} />
-                <circle cx={last.x} cy={last.y} r={5} className={danger ? 'siren-pulse' : ''} fill={danger ? '#ef4444' : '#38bdf8'} />
+                <circle
+                  cx={last.x}
+                  cy={last.y}
+                  r={11}
+                  fill={danger ? '#ef4444' : '#38bdf8'}
+                  fillOpacity={0.18}
+                />
+                <circle
+                  cx={last.x}
+                  cy={last.y}
+                  r={5}
+                  className={danger ? 'siren-pulse' : ''}
+                  fill={danger ? '#ef4444' : '#38bdf8'}
+                />
               </g>
             )
           })}
@@ -378,14 +559,58 @@ export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapPr
             <line x1={0} y1={0} x2={scaleUnits} y2={0} stroke="#64748b" strokeWidth={2} />
             <line x1={0} y1={-4} x2={0} y2={4} stroke="#64748b" strokeWidth={2} />
             <line x1={scaleUnits} y1={-4} x2={scaleUnits} y2={4} stroke="#64748b" strokeWidth={2} />
-            <text x={scaleUnits / 2} y={-7} textAnchor="middle" style={{ fontSize: 9.5, fill: '#94a3b8', fontFamily: 'var(--font-jetbrains), monospace' }}>
+            <text
+              x={scaleUnits / 2}
+              y={-7}
+              textAnchor="middle"
+              style={{
+                fontSize: 9.5,
+                fill: '#94a3b8',
+                fontFamily: 'var(--font-jetbrains), monospace',
+              }}
+            >
               100 m
             </text>
           </g>
         </svg>
       </MapViewport>
 
+      <MapInspector focus={focus} pickable={pickable} />
+
       <MapLegend showRisk={patterns.length > 0} />
+    </div>
+  )
+}
+
+const FOCUS_TONE: Record<Focus['tone'], string> = {
+  good: 'border-emerald-400/40 text-emerald-300',
+  warn: 'border-amber-400/40 text-amber-300',
+  danger: 'border-red-500/40 text-red-300',
+  neutral: 'border-ops-border text-ops-text',
+}
+
+/**
+ * What the pointer is currently over, in words.
+ *
+ * A fixed strip rather than a floating tooltip: a tooltip that follows the
+ * cursor covers the very thing being pointed at, and on a map the surroundings
+ * are the information.
+ */
+function MapInspector({ focus, pickable }: { focus: Focus | null; pickable: boolean }) {
+  if (!focus) {
+    return (
+      <p className="rounded-lg border border-dashed border-ops-border/60 px-3 py-2 text-[11px] leading-relaxed text-ops-faint">
+        Point at a route to see why it scored the way it did, or at a red area for the reports
+        behind it
+        {pickable && ' — click any block or gate to walk there'}.
+      </p>
+    )
+  }
+
+  return (
+    <div className={`rounded-lg border bg-ops-bg/40 px-3 py-2 ${FOCUS_TONE[focus.tone]}`}>
+      <p className="text-[12px] font-medium">{focus.title}</p>
+      <p className="mt-0.5 text-[11px] leading-relaxed text-ops-muted">{focus.detail}</p>
     </div>
   )
 }

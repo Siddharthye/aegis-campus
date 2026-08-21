@@ -28,6 +28,7 @@ export function SafeWalkWorkspace() {
     patterns: RiskPattern[]
     routes: RouteRisk[]
   } | null>(null)
+  const [pickedDestination, setPickedDestination] = useState('')
   const hour = now.getHours()
 
   const refresh = useCallback(async () => {
@@ -82,6 +83,7 @@ export function SafeWalkWorkspace() {
               walks={walks}
               patterns={risk?.patterns ?? []}
               routes={risk?.routes ?? []}
+              onPickDestination={setPickedDestination}
             />
           </div>
         </Panel>
@@ -216,7 +218,7 @@ export function SafeWalkWorkspace() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <SafeWalkPanel />
+        <SafeWalkPanel presetDestination={pickedDestination} />
 
         <Panel
           label="Which way to walk"

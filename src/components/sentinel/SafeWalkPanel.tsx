@@ -26,13 +26,19 @@ const secondsUntil = (when: Date, now: Date) =>
  * alarm carrying your last known position — no further action needed from you,
  * which is the entire point.
  */
-export function SafeWalkPanel() {
+export function SafeWalkPanel({ presetDestination = '' }: { presetDestination?: string }) {
   const [walk, setWalk] = useState<SafeWalk | null>(null)
   const [destination, setDestination] = useState('')
   const [minutes, setMinutes] = useState<number>(10)
   const [now, setNow] = useState(() => new Date())
 
   const destinations = listBuildings().map((building) => building.shortName)
+
+  // Picking a place on the map fills this field. It stays editable afterwards:
+  // the map is a shortcut to typing, not a replacement for it.
+  useEffect(() => {
+    if (presetDestination) setDestination(presetDestination)
+  }, [presetDestination])
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000)
@@ -95,8 +101,8 @@ export function SafeWalkPanel() {
       <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
         <p className="ops-label text-ops-muted">Safe Walk</p>
         <p className="mt-1.5 text-[12px] leading-relaxed text-ops-muted">
-          Walking somewhere alone? Tell AEGIS where and how long. If you stop checking in, it
-          raises a silent alarm with your last known position.
+          Walking somewhere alone? Tell AEGIS where and how long. If you stop checking in, it raises
+          a silent alarm with your last known position.
         </p>
 
         <input

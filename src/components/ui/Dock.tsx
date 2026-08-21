@@ -13,6 +13,7 @@ import {
   Activity,
   Command,
   FileSearch,
+  Eye,
   Footprints,
   Navigation,
   Radar,
@@ -53,11 +54,18 @@ const ENTRIES: DockEntry[] = [
   { kind: 'gap' },
   { kind: 'link', href: '/report', label: 'Report', icon: <Siren className={ICON} /> },
   { kind: 'link', href: '/safe-walk', label: 'Safe Walk', icon: <Footprints className={ICON} /> },
+  { kind: 'link', href: '/sightline', label: 'SIGHTLINE', icon: <Eye className={ICON} /> },
   { kind: 'link', href: '/control', label: 'Control', icon: <Radar className={ICON} /> },
   { kind: 'link', href: '/respond', label: 'Respond', icon: <Navigation className={ICON} /> },
   { kind: 'link', href: '/analytics', label: 'Analytics', icon: <Activity className={ICON} /> },
   { kind: 'gap' },
-  { kind: 'link', href: '/case', label: 'Case', icon: <FileSearch className={ICON} />, desktopOnly: true },
+  {
+    kind: 'link',
+    href: '/case',
+    label: 'Case',
+    icon: <FileSearch className={ICON} />,
+    desktopOnly: true,
+  },
   { kind: 'gap' },
   { kind: 'nexbot', href: '/ai', label: 'NEXBOT' },
   { kind: 'palette', label: 'Search · ⌘K' },
@@ -141,7 +149,15 @@ interface DockTileProps {
   onActivate?: () => void
 }
 
-function DockTile({ label, children, href, active, desktopOnly, mouseX, onActivate }: DockTileProps) {
+function DockTile({
+  label,
+  children,
+  href,
+  active,
+  desktopOnly,
+  mouseX,
+  onActivate,
+}: DockTileProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [hovered, setHovered] = useState(false)
 
