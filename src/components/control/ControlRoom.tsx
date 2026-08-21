@@ -24,9 +24,10 @@ const CLOCK_TICK_MS = 5_000
  * when nothing about the incidents changes — a queue that only re-sorts on
  * server events would silently go stale between them.
  */
-export function ControlRoom() {
+export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string }) {
   const [incidents, setIncidents] = useState<Incident[]>([])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  // The command palette deep-links here as /control?incident=<id>.
+  const [selectedId, setSelectedId] = useState<string | null>(initialIncidentId ?? null)
   const [recommendations, setRecommendations] = useState<DispatchRecommendation[]>([])
   const [now, setNow] = useState(() => new Date())
 

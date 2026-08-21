@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { ServiceWorkerRegistrar } from '@/components/ops/ServiceWorkerRegistrar'
+import { CommandPalette } from '@/components/ui/CommandPalette'
+import { Dock } from '@/components/ui/Dock'
 import './globals.css'
 
 /* next/font downloads at build time and self-hosts — no runtime font requests,
@@ -29,6 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <body className="min-h-screen antialiased">
         {children}
+        <Dock />
+        <CommandPalette />
+        {/* Static film grain over everything — texture, not animation. */}
+        <div aria-hidden className="grain-overlay print-hide" />
         <ServiceWorkerRegistrar />
       </body>
     </html>

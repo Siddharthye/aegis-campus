@@ -3,17 +3,21 @@ import { OpsShell } from '@/components/ops/OpsShell'
 
 export const metadata = { title: 'Control Room — AEGIS' }
 
+type PageProps = { searchParams: Promise<{ incident?: string }> }
+
 /**
  * The dispatcher seat: live queue ranked by SLA pressure, dispatch
  * recommendations with reasons, the silent-alarm lane, and drill playback.
  */
-export default function ControlPage() {
+export default async function ControlPage({ searchParams }: PageProps) {
+  const { incident } = await searchParams
+
   return (
     <OpsShell
       title="Control Room"
       subtitle="Ranked by SLA pressure — the clock decides the order, not arrival time."
     >
-      <ControlRoom />
+      <ControlRoom initialIncidentId={incident} />
     </OpsShell>
   )
 }

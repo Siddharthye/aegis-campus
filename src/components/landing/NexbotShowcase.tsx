@@ -71,10 +71,17 @@ export function NexbotShowcase() {
             ))}
           </ul>
 
-          <p className="mt-7 text-[12px] text-ops-faint">
-            Tap the robot in the corner on any screen — it is watching your cursor from there
-            already.
-          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <a
+              href="/ai"
+              className="rounded-full border border-ops-accent/40 bg-ops-accent/10 px-5 py-2.5 text-[13px] font-semibold text-ops-accent transition hover:bg-ops-accent/20"
+            >
+              Open the NEXBOT console →
+            </a>
+            <p className="text-[12px] text-ops-faint">
+              Or tap the robot in the corner — it is already watching your cursor.
+            </p>
+          </div>
         </motion.div>
       </div>
     </section>

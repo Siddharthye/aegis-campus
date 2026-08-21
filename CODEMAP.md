@@ -60,6 +60,8 @@ Then the two that turn history into action:
 | [`src/domain/offline-queue.ts`](src/domain/offline-queue.ts) | Campus dead zones are where emergencies happen. Reports are held on the device and flushed on reconnect. |
 | [`src/domain/broadcast-templates.ts`](src/domain/broadcast-templates.ts) | Authored EN/HI/OR broadcasts. Translations are written, not generated — a mistranslated evacuation instruction is worse than none. |
 | [`src/components/nexbot/NexbotAvatar.tsx`](src/components/nexbot/NexbotAvatar.tsx) | The 3D robot that tracks your cursor. Layered `translateZ` planes, not a hosted scene, so it survives the wifi-off gate. |
+| [`src/components/ui/Dock.tsx`](src/components/ui/Dock.tsx) | The macOS-style dock. One shared mouse-x motion value; each tile springs its size from its own distance to the cursor — zero React renders while magnifying. |
+| [`src/components/ui/CommandPalette.tsx`](src/components/ui/CommandPalette.tsx) | ⌘K. Screens, live incidents, and a hand-off to NEXBOT, fully keyboard-driven. |
 
 ---
 

@@ -53,7 +53,7 @@ const MODULES = [
 
 export function ModuleGrid() {
   return (
-    <section className="relative mx-auto max-w-6xl px-6 py-28 sm:py-36">
+    <section id="modules" className="relative mx-auto max-w-6xl px-6 py-28 sm:py-36">
       <p className="ops-label text-ops-accent">Built. Bought. Sold.</p>
       <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
         Six subsystems. Three on the market.

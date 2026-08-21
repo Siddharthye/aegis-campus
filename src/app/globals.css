@@ -173,3 +173,88 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ── Spatial glass system ───────────────────────────────────────────────── */
+
+/* The floating-slab material: a large rounded panel hovering over the page
+   ambience. One hairline border, one soft drop, faint inner light at the top
+   edge — depth from light, not from decoration. */
+.glass-slab {
+  position: relative;
+  border-radius: 28px;
+  border: 1px solid rgb(148 163 184 / 0.14);
+  background:
+    linear-gradient(180deg, rgb(148 163 184 / 0.06), rgb(148 163 184 / 0) 120px),
+    rgb(13 18 30 / 0.72);
+  box-shadow:
+    0 -1px 0 rgb(226 232 240 / 0.06) inset,
+    0 24px 80px -24px rgb(2 6 16 / 0.9);
+}
+
+/* Small floating glass elements: dock, palette, island nav, chips. Blur is
+   allowed here — these are the small surfaces the motion contract permits. */
+.glass-chrome {
+  border: 1px solid rgb(148 163 184 / 0.16);
+  background: rgb(13 18 30 / 0.66);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow:
+    0 -1px 0 rgb(226 232 240 / 0.07) inset,
+    0 12px 40px -12px rgb(2 6 16 / 0.8);
+}
+
+/* Film grain. A static tile — animating noise costs a repaint per frame for
+   an effect nobody can consciously see. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 66;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Aurora ambience behind the hero slab. Transform-only drift on two blurred
+   radial blobs — compositor work, no layout, no paint. */
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+  pointer-events: none;
+}
+
+@keyframes aurora-drift-a {
+  0%, 100% { transform: translate3d(-8%, -4%, 0) scale(1); }
+  50% { transform: translate3d(10%, 8%, 0) scale(1.15); }
+}
+
+@keyframes aurora-drift-b {
+  0%, 100% { transform: translate3d(6%, 6%, 0) scale(1.1); }
+  50% { transform: translate3d(-10%, -6%, 0) scale(0.95); }
+}
+
+.aurora-a {
+  animation: aurora-drift-a 26s ease-in-out infinite;
+  background: radial-gradient(circle, rgb(56 189 248 / 0.16), transparent 65%);
+}
+
+.aurora-b {
+  animation: aurora-drift-b 32s ease-in-out infinite;
+  background: radial-gradient(circle, rgb(56 120 248 / 0.1), transparent 65%);
+}
+
+/* Keyboard focus — visible, on-brand, and only for keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--color-ops-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-a,
+  .aurora-b {
+    animation: none;
+  }
+}

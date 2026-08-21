@@ -60,6 +60,11 @@ we made the drill a product feature.
 | `/beacon` | Admin | Printable QR anchor sheets |
 | `/case` | Anyone | **VEIL** — check a case with the one-way token from your report. No account, no name |
 | `/wanted` | — | The six integrations we will buy, each mapped to a slot already in the product |
+| `/ai` | Anyone | **NEXBOT console** — the ops copilot, with measured receipts under every answer |
+
+Navigation is a macOS-style dock (bottom of every screen) plus a ⌘K command
+palette that reaches every screen, any live incident by id or title, and hands
+typed questions to NEXBOT.
 
 Broadcasts ship as authored templates in **English, Hindi and Odia** — an
 English-only alert excludes the support staff and visitors often closest to the
