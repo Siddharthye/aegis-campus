@@ -9,11 +9,15 @@ Campus Emergency Response.
 
 ---
 
+**Live:** [aegis-campus.vercel.app](https://aegis-campus.vercel.app) · Reading order for
+reviewers: [`CODEMAP.md`](CODEMAP.md)
+
 ## Run it
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
+./smoke.sh         # exercises the whole pipeline over HTTP, in another terminal
 ```
 
 That's the whole setup: no database, no API keys, no accounts. Seeded demo
@@ -77,4 +81,9 @@ analytics — all unit-testable functions with JSDoc examples). Thin zod-validat
 routes. A four-method storage adapter: in-memory + JSON locally, Upstash Redis
 when deployed. Realtime via self-rotating SSE streams that survive serverless
 timeouts. Reasoning behind every non-obvious call: [`DECISIONS.md`](DECISIONS.md).
-Reading order for reviewers: [`CODEMAP.md`](CODEMAP.md).
+
+> **On the deployed demo:** with no Upstash credentials set, the hosted build
+> runs on the in-memory adapter. State therefore lives only as long as the
+> serverless instance stays warm — fine for a walkthrough, and a cold start
+> mid-drill simply resets to seeded data. Setting `UPSTASH_REDIS_REST_URL` and
+> `UPSTASH_REDIS_REST_TOKEN` switches it to durable storage with no code change.
