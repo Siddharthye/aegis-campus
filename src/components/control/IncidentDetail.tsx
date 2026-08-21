@@ -5,6 +5,7 @@ import type { DispatchRecommendation } from '@/domain/dispatch'
 import type { Incident, IncidentStatus } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
 import { StatusBadge } from '@/components/ops/StatusBadge'
+import { EvacuationPanel } from './EvacuationPanel'
 import { IncidentTimeline } from './IncidentTimeline'
 
 /** The transition offered next, per current status. Resolved offers nothing. */
@@ -121,6 +122,8 @@ export function IncidentDetail({
           </ul>
         </section>
       )}
+
+      <EvacuationPanel incident={incident} onUseInstruction={setBroadcastMessage} />
 
       <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
         <p className="ops-label text-ops-muted">Geofenced broadcast</p>

@@ -23,7 +23,9 @@ export function ReportWizard() {
   const [location, setLocation] = useState<LocatedPosition | null>(null)
   const [description, setDescription] = useState('')
   const [anonymous, setAnonymous] = useState(false)
+  const [wantsCaseToken, setWantsCaseToken] = useState(true)
   const [submitted, setSubmitted] = useState<Incident | null>(null)
+  const [caseToken, setCaseToken] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
 
   const chooseCategory = (option: (typeof CATEGORY_OPTIONS)[number]) => {
@@ -47,12 +49,14 @@ export function ReportWizard() {
           description: description.trim() || 'No further detail given by the reporter.',
           location,
           reporterId: anonymous ? null : 'student-2214',
+          wantsCaseToken,
         }),
       })
       if (!response.ok) return
 
-      const body = (await response.json()) as { incident: Incident }
+      const body = (await response.json()) as { incident: Incident; caseToken: string | null }
       setSubmitted(body.incident)
+      setCaseToken(body.caseToken)
     } finally {
       setSending(false)
     }
@@ -68,10 +72,25 @@ export function ReportWizard() {
         </p>
         <p className="mt-2 font-mono text-[11px] text-ops-faint">{submitted.id}</p>
 
+        {caseToken && (
+          <div className="mt-4 rounded-lg border border-ops-accent/40 bg-ops-bg p-4">
+            <p className="ops-label text-ops-accent">Your case token</p>
+            <p className="mt-1.5 font-mono text-2xl font-bold tracking-widest text-ops-text">
+              {caseToken}
+            </p>
+            <p className="mt-2 text-[11px] leading-relaxed text-ops-muted">
+              Write this down now — it is shown once and we cannot recover it. Check your
+              case any time at <span className="font-mono text-ops-accent">/case</span>, with
+              no account and without identifying yourself.
+            </p>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => {
             setSubmitted(null)
+            setCaseToken(null)
             setStep('category')
             setCategory(null)
             setLocation(null)
@@ -155,6 +174,21 @@ export function ReportWizard() {
                 className="accent-ops-accent"
               />
               Report anonymously
+            </label>
+
+            <label className="mt-1.5 flex items-start gap-2 text-[12px] text-ops-muted">
+              <input
+                type="checkbox"
+                checked={wantsCaseToken}
+                onChange={(event) => setWantsCaseToken(event.target.checked)}
+                className="mt-0.5 accent-ops-accent"
+              />
+              <span>
+                Give me a case token to follow this up
+                <span className="mt-0.5 block text-[11px] text-ops-faint">
+                  Shown once. Works without an account, even when reporting anonymously.
+                </span>
+              </span>
             </label>
           </div>
 

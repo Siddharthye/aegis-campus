@@ -47,6 +47,8 @@ export interface CreateIncidentInput {
   location: LocatedPosition
   reporterId: string | null
   isDrill?: boolean
+  /** SHA-256 of a VEIL case token, when the reporter wants to follow up. */
+  caseTokenHash?: string
 }
 
 /** All incidents, newest first. */
@@ -81,6 +83,7 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
     resolvedAt: null,
     timeline: [entry(input.reporterId ?? 'anonymous', 'reported', input.location.label)],
     isDrill: input.isDrill ?? false,
+    ...(input.caseTokenHash ? { caseTokenHash: input.caseTokenHash } : {}),
   }
 
   await store.writeCollection(INCIDENTS, [...incidents, incident])
@@ -285,4 +288,18 @@ export async function clearDrillIncidents(): Promise<void> {
     incidents.filter((incident) => !incident.isDrill),
   )
   await store.appendEvent('drill.cleared', { at: new Date().toISOString() })
+}
+
+/**
+ * Finds an incident by the hash of its VEIL case token.
+ *
+ * Takes a hash rather than a token so the raw token never reaches this layer
+ * — hashing happens at the edge and the plaintext is discarded there.
+ *
+ * @example
+ * await findIncidentByCaseTokenHash(await hashCaseToken('AEG-7K2M-QP49'))
+ */
+export async function findIncidentByCaseTokenHash(hash: string): Promise<Incident | null> {
+  const incidents = await loadIncidents()
+  return incidents.find((incident) => incident.caseTokenHash === hash) ?? null
 }

@@ -1,3 +1,5 @@
+import { sha256Hex } from './crypto-hash'
+
 /**
  * SENTINEL — silent panic. A session is armed covertly from the report screen,
  * streams location pings while a decoy calculator covers the display, and is
@@ -71,16 +73,5 @@ export function publicSession(session: SentinelSession): Omit<SentinelSession, '
   return visible
 }
 
-/**
- * SHA-256 hex digest via Web Crypto — identical output on server and client,
- * and deterministic, so PIN verification is a pure string comparison.
- *
- * @example
- * await sha256Hex('4102')
- * // => "35a2ff33…" (64 hex chars)
- */
-export async function sha256Hex(text: string): Promise<string> {
-  const bytes = new TextEncoder().encode(text)
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
-}
+/** Re-exported so SENTINEL callers have one import for the whole subsystem. */
+export { sha256Hex }

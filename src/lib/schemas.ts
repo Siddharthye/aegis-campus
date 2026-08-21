@@ -30,7 +30,19 @@ export const createIncidentSchema = z.object({
   /** Null reports anonymously. */
   reporterId: z.string().min(1).max(80).nullable().default(null),
   isDrill: z.boolean().default(false),
+  /**
+   * Ask for a VEIL case token so this report can be followed up anonymously.
+   * The token is returned once, in the create response, and never again.
+   */
+  wantsCaseToken: z.boolean().default(false),
 })
+
+/** `GET /api/cases/:token` — the token a reporter presents to check status. */
+export const caseTokenSchema = z
+  .string()
+  .min(6)
+  .max(40)
+  .regex(/^[A-Za-z0-9\s-]+$/, 'Case tokens contain only letters, digits and dashes')
 
 export const updateIncidentSchema = z.object({
   status: statusSchema.optional(),

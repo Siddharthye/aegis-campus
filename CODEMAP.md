@@ -57,6 +57,19 @@ Then the two that turn history into action:
 
 ---
 
+## 5. The tests
+
+`npm test` — 113 assertions over the pure layer, in under half a second. No
+mocks, no test server, no DOM: that is the payoff for keeping `domain/` free of
+I/O. Read these to see the rules stated as expectations:
+
+| Read | The rule it pins down |
+| --- | --- |
+| [`src/domain/evacuation.test.ts`](src/domain/evacuation.test.ts) | A muster point on the far side of the fire is never chosen, even when nearest |
+| [`src/domain/ext-allowlist.test.ts`](src/domain/ext-allowlist.test.ts) | The proxy blocks cloud metadata, non-http schemes, and lookalike hosts |
+| [`src/domain/case-token.test.ts`](src/domain/case-token.test.ts) | A reporter's own case view leaks no incident id, description, or internal chatter |
+| [`src/domain/corroboration.test.ts`](src/domain/corroboration.test.ts) | Escalation is one-way and needs volume *and* confidence |
+
 ## Directory map
 
 ```

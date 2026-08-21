@@ -66,6 +66,12 @@ export interface Incident {
   timeline: TimelineEntry[]
   /** True when this incident was produced by a drill scenario, not reality. */
   isDrill: boolean
+  /**
+   * SHA-256 of the reporter's VEIL case token, when they asked to follow up.
+   * The token itself is never stored, so this can verify a token presented
+   * later but can never produce one. See `domain/case-token.ts`.
+   */
+  caseTokenHash?: string
 }
 
 export interface Responder {

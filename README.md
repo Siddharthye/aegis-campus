@@ -17,6 +17,7 @@ reviewers: [`CODEMAP.md`](CODEMAP.md)
 ```bash
 npm install
 npm run dev        # http://localhost:3000
+npm test           # 113 domain tests, no mocks, under a second
 ./smoke.sh         # exercises the whole pipeline over HTTP, in another terminal
 ```
 
