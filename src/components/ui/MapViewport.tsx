@@ -226,7 +226,7 @@ function ControlButton({
       onClick={onClick}
       // Stops the pan handler treating a control press as a drag.
       onPointerDown={(event) => event.stopPropagation()}
-      className="grid size-8 place-items-center text-ops-muted transition-colors hover:bg-ops-lift hover:text-ops-text"
+      className="grid size-11 place-items-center text-ops-muted transition-colors hover:bg-ops-lift hover:text-ops-text sm:size-8"
     >
       {children}
     </button>

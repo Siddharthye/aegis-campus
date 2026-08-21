@@ -71,9 +71,13 @@ export function Panel({
       )}
 
       {(label || aside) && (
-        <header className="relative flex items-center gap-3 border-b border-ops-border/70 px-4 py-2.5">
+        <header className="relative flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-ops-border/70 px-4 py-2.5">
           {label && <p className="ops-label text-ops-muted">{label}</p>}
-          {aside && <div className="ml-auto flex items-center gap-2">{aside}</div>}
+          {aside && (
+            <div className="scrollbar-none ml-auto flex max-w-full items-center gap-2 overflow-x-auto">
+              {aside}
+            </div>
+          )}
         </header>
       )}
 
@@ -148,7 +152,7 @@ export function Chip({
     warn: 'border-sev-p1/45 text-sev-p1',
   } as const
 
-  const className = `ops-label rounded-full border px-2.5 py-1 transition-colors ${tones[tone]} ${
+  const className = `ops-label inline-flex min-h-11 items-center justify-center rounded-full border px-3 py-1 transition-colors sm:min-h-0 sm:px-2.5 ${tones[tone]} ${
     active ? 'bg-ops-accent/15 text-ops-accent' : ''
   } ${onClick ? 'hover:bg-ops-lift cursor-pointer' : ''}`
 

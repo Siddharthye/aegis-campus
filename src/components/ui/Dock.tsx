@@ -87,7 +87,7 @@ export function Dock() {
   return (
     <nav
       aria-label="AEGIS dock"
-      className="print-hide pointer-events-none fixed inset-x-0 bottom-3 z-40 flex justify-center sm:bottom-5"
+      className="print-hide pointer-events-none fixed inset-x-0 bottom-3 z-40 flex justify-center px-3 pb-[env(safe-area-inset-bottom)] sm:bottom-5"
     >
       <motion.div
         onMouseMove={(event) => mouseX.set(event.clientX)}
@@ -203,7 +203,7 @@ function DockTile({
       </motion.span>
 
       {active && (
-        <span className="absolute -bottom-1 size-1 rounded-full bg-ops-accent shadow-[0_0_6px_rgba(56,189,248,0.9)]" />
+        <span className="absolute -bottom-1 size-1 rounded-full bg-ops-accent shadow-[0_0_6px_rgba(167,139,250,0.9)]" />
       )}
     </motion.div>
   )

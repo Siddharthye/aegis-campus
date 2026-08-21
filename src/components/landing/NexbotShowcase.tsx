@@ -31,7 +31,7 @@ export function NexbotShowcase() {
           transition={{ duration: 0.7, ease: EASE }}
           className="relative mx-auto w-full"
         >
-          <div className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-2xl border border-ops-border bg-ops-deep mx-auto shadow-[0_0_60px_rgba(56,189,248,0.12)]">
+          <div className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-2xl border border-ops-border bg-ops-deep mx-auto shadow-[0_0_60px_rgba(167,139,250,0.12)]">
             <div className="absolute inset-0 grid place-items-center">
               <NexbotAvatar size={200} />
             </div>

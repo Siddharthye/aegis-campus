@@ -46,7 +46,7 @@ export function OpsShell({
   return (
     <div className="flex min-h-screen flex-col bg-ops-bg">
       <div
-        className={`mx-auto w-full flex-1 px-4 pb-36 pt-6 sm:px-6 ${wide ? 'max-w-[1600px]' : 'max-w-7xl'}`}
+        className={`mx-auto w-full flex-1 px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 ${wide ? 'max-w-[1600px]' : 'max-w-7xl'}`}
       >
         <header className="mb-5 flex flex-wrap items-end gap-x-5 gap-y-3">
           <div className="min-w-0">

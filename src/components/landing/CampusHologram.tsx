@@ -24,7 +24,7 @@ const HEIGHT_SCALE = 1.35
 const PULSE_SITES = [
   { buildingId: 'block-c', color: '239, 68, 68' }, // P0 red
   { buildingId: 'hostel-9', color: '249, 115, 22' }, // P1 orange
-  { buildingId: 'library', color: '56, 189, 248' }, // P3 cyan
+  { buildingId: 'library', color: '167, 139, 250' }, // P3 accent
 ]
 
 const KIND_ROOF: Record<string, string> = {
@@ -149,7 +149,7 @@ export function CampusHologram({ className }: { className?: string }) {
       context.clearRect(0, 0, width, height)
 
       /* Ground grid — a subtle perspective floor. */
-      context.strokeStyle = 'rgba(56, 189, 248, 0.06)'
+      context.strokeStyle = 'rgba(167, 139, 250, 0.06)'
       context.lineWidth = 1
       for (let g = -420; g <= 420; g += 60) {
         const a = project(g, -420, 0)
@@ -170,9 +170,9 @@ export function CampusHologram({ className }: { className?: string }) {
         const centre = project(0, 0, 0)
         const radius = 340 * scale
         const gradient = context.createConicGradient(sweep, centre.x, centre.y)
-        gradient.addColorStop(0, 'rgba(56, 189, 248, 0.11)')
-        gradient.addColorStop(0.12, 'rgba(56, 189, 248, 0)')
-        gradient.addColorStop(1, 'rgba(56, 189, 248, 0)')
+        gradient.addColorStop(0, 'rgba(167, 139, 250, 0.11)')
+        gradient.addColorStop(0.12, 'rgba(167, 139, 250, 0)')
+        gradient.addColorStop(1, 'rgba(167, 139, 250, 0)')
         context.fillStyle = gradient
         context.beginPath()
         context.ellipse(centre.x, centre.y, radius, radius * Math.sin(ISO_ANGLE) * 2 * tilt, 0, 0, Math.PI * 2)
@@ -201,7 +201,7 @@ export function CampusHologram({ className }: { className?: string }) {
           context.closePath()
           context.fillStyle = '#0d1526'
           context.fill()
-          context.strokeStyle = 'rgba(56, 189, 248, 0.10)'
+          context.strokeStyle = 'rgba(167, 139, 250, 0.10)'
           context.stroke()
         }
 
@@ -212,7 +212,7 @@ export function CampusHologram({ className }: { className?: string }) {
         context.closePath()
         context.fillStyle = building.roof
         context.fill()
-        context.strokeStyle = 'rgba(56, 189, 248, 0.28)'
+        context.strokeStyle = 'rgba(167, 139, 250, 0.28)'
         context.stroke()
       }
 

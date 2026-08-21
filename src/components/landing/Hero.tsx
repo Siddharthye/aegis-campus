@@ -233,12 +233,14 @@ export function Hero() {
               type="button"
               aria-label={`Show ${entry.kicker}`}
               onClick={() => setSlide(index)}
-              className="h-1 flex-1 overflow-hidden rounded-full bg-ops-border/60"
+              className="group flex h-11 flex-1 items-center sm:h-4"
             >
-              <span
-                className="block h-full origin-left rounded-full bg-ops-accent transition-transform duration-500"
-                style={{ transform: index === slide ? 'scaleX(1)' : 'scaleX(0)' }}
-              />
+              <span className="block h-1 w-full overflow-hidden rounded-full bg-ops-border/60">
+                <span
+                  className="block h-full origin-left rounded-full bg-ops-accent transition-transform duration-500"
+                  style={{ transform: index === slide ? 'scaleX(1)' : 'scaleX(0)' }}
+                />
+              </span>
             </button>
           ))}
         </div>

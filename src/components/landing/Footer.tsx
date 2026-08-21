@@ -28,7 +28,7 @@ const COLUMNS = [
 export function Footer() {
   return (
     <footer className="border-t border-ops-border/60 bg-ops-bg/40">
-      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-[calc(3.5rem+env(safe-area-inset-bottom))] pt-14 sm:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <p className="font-mono text-sm font-bold tracking-widest">AEGIS</p>
           <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-ops-muted">
