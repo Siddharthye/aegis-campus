@@ -1,4 +1,6 @@
 
+import { LiveClock } from '@/components/ui/LiveClock'
+
 interface OpsShellProps {
   title: string
   subtitle?: string
@@ -60,7 +62,12 @@ export function OpsShell({
           </div>
 
           {meta && <div className="flex flex-wrap items-center gap-2">{meta}</div>}
-          {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+
+          {/* One clock for the whole site, read from the reader's device. */}
+          <div className="ml-auto flex items-center gap-2">
+            {actions}
+            <LiveClock />
+          </div>
         </header>
 
         {children}

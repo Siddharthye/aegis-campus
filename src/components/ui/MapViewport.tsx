@@ -23,6 +23,29 @@ const ZOOM_STEP = 1.25
 /** Per-wheel-notch zoom. Trackpads emit many small deltas; this keeps them calm. */
 const WHEEL_SENSITIVITY = 0.0015
 
+/**
+ * Keeps the map inside its frame.
+ *
+ * The content is the frame scaled about its top-left corner, so a pan is only
+ * legal while the scaled content still covers the frame. Without this a drag
+ * throws the campus clean out of view and leaves an empty box, which reads as
+ * the map having broken rather than as the map having moved.
+ */
+function clampOffset(
+  offset: { x: number; y: number },
+  scale: number,
+  frame: { width: number; height: number },
+) {
+  const spare = (extent: number) => extent * (1 - scale)
+  const bound = (value: number, limit: number) =>
+    Math.min(Math.max(value, Math.min(0, limit)), Math.max(0, limit))
+
+  return {
+    x: bound(offset.x, spare(frame.width)),
+    y: bound(offset.y, spare(frame.height)),
+  }
+}
+
 interface MapViewportProps {
   children: React.ReactNode
   /** Shown top-left inside the frame. */
@@ -56,10 +79,13 @@ export function MapViewport({ children, label, actions, className = '' }: MapVie
     setScale((current) => {
       const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, current * factor))
       const ratio = next / current
-      setOffset((previous) => ({
-        x: cx - ratio * (cx - previous.x),
-        y: cy - ratio * (cy - previous.y),
-      }))
+      setOffset((previous) =>
+        clampOffset(
+          { x: cx - ratio * (cx - previous.x), y: cy - ratio * (cy - previous.y) },
+          next,
+          box,
+        ),
+      )
       return next
     })
   }, [])
@@ -107,8 +133,11 @@ export function MapViewport({ children, label, actions, className = '' }: MapVie
     // A few pixels of slop so a click is still a click, not a one-pixel pan.
     if (!panning && Math.hypot(dx, dy) < 4) return
 
+    const box = frameRef.current?.getBoundingClientRect()
+    if (!box) return
+
     setPanning(true)
-    setOffset({ x: start.ox + dx, y: start.oy + dy })
+    setOffset(clampOffset({ x: start.ox + dx, y: start.oy + dy }, scale, box))
   }
 
   const endPan = () => {

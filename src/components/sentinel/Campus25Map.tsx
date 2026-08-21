@@ -75,6 +75,62 @@ function project(points: readonly Point[], width = VIEW_WIDTH): Projection {
   }
 }
 
+/**
+ * Block label layout.
+ *
+ * Half these buildings are narrower than their own names, so a label centred
+ * on the footprint spills out over its neighbours — which is what made the map
+ * look hand-drawn. A name that does not fit inside its building is moved
+ * beneath it instead, and any two labels that still collide are pushed apart
+ * vertically. The font is monospace, so the width of a name is simply its
+ * length, which is the one thing that makes this measurable without rendering.
+ */
+const LABEL_FONT_SIZE = 10.5
+/** JetBrains Mono advance width, as a fraction of the font size. */
+const LABEL_CHAR_RATIO = 0.6
+const LABEL_LINE_HEIGHT = 13.5
+/** Breathing room required inside a block for its name to sit there. */
+const LABEL_INSET = 8
+
+interface PlacedLabel {
+  id: string
+  name: string
+  x: number
+  y: number
+}
+
+function placeBlockLabels(plan: Projection): PlacedLabel[] {
+  const placed: PlacedLabel[] = []
+
+  for (const item of CAMPUS25_BLOCKS) {
+    const topLeft = plan.toXY(item.footprint[0])
+    const bottomRight = plan.toXY(item.footprint[2])
+    const width = Math.abs(bottomRight.x - topLeft.x)
+    const textWidth = item.name.length * LABEL_FONT_SIZE * LABEL_CHAR_RATIO
+
+    const centreX = (topLeft.x + bottomRight.x) / 2
+    const fits = textWidth + LABEL_INSET <= width
+
+    let y = fits
+      ? (topLeft.y + bottomRight.y) / 2 + LABEL_FONT_SIZE / 3
+      : Math.max(topLeft.y, bottomRight.y) + LABEL_LINE_HEIGHT
+
+    // Push down past anything already sitting where this wants to go. Blocks
+    // are laid out in a fixed order, so this is deterministic.
+    for (const other of placed) {
+      const apart = Math.abs(other.x - centreX)
+      const overlapWidth = (textWidth + other.name.length * LABEL_FONT_SIZE * LABEL_CHAR_RATIO) / 2
+      if (apart < overlapWidth && Math.abs(other.y - y) < LABEL_LINE_HEIGHT) {
+        y = other.y + LABEL_LINE_HEIGHT
+      }
+    }
+
+    placed.push({ id: item.id, name: item.name, x: centreX, y })
+  }
+
+  return placed
+}
+
 /** Where a name for an area belongs: the average of its corners. */
 function centroid(points: readonly Point[], plan: Projection) {
   const projected = points.map((point) => plan.toXY(point))
@@ -379,33 +435,27 @@ export function Campus25Map({
               )
             })}
           </g>
-          {CAMPUS25_BLOCKS.map((item) => {
-            const centre = plan.toXY({
-              lat: (item.footprint[0].lat + item.footprint[2].lat) / 2,
-              lng: (item.footprint[0].lng + item.footprint[2].lng) / 2,
-            })
-            return (
-              <text
-                key={`${item.id}-label`}
-                x={centre.x}
-                y={centre.y + 3.5}
-                textAnchor="middle"
-                style={{
-                  fontSize: 10.5,
-                  fill: '#e2e8f0',
-                  fontFamily: 'var(--font-jetbrains), monospace',
-                  fontWeight: 700,
-                  pointerEvents: 'none',
-                  paintOrder: 'stroke',
-                  stroke: '#05070d',
-                  strokeWidth: 3,
-                  strokeLinejoin: 'round',
-                }}
-              >
-                {item.name}
-              </text>
-            )
-          })}
+          {placeBlockLabels(plan).map(({ id, name, x, y }) => (
+            <text
+              key={`${id}-label`}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              style={{
+                fontSize: 10.5,
+                fill: '#e2e8f0',
+                fontFamily: 'var(--font-jetbrains), monospace',
+                fontWeight: 700,
+                pointerEvents: 'none',
+                paintOrder: 'stroke',
+                stroke: '#05070d',
+                strokeWidth: 3,
+                strokeLinejoin: 'round',
+              }}
+            >
+              {name}
+            </text>
+          ))}
 
           {/* ── Off-campus orientation ──────────────────────────────────── */}
           {CAMPUS25_LANDMARKS.map((mark) => {

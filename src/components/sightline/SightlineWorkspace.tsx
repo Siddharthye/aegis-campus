@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Chip, Panel, Stat } from '@/components/ui/Panel'
+import { formatTime, useLiveClock } from '@/components/ui/use-live-clock'
 import {
   MIN_DISTINCT_REPORTERS,
   MIN_PATTERN_INCIDENTS,
@@ -19,9 +20,6 @@ interface RiskSnapshot {
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour)
 
-/** How often the clock is re-read, so the page follows the day by itself. */
-const CLOCK_INTERVAL_MS = 60_000
-
 /**
  * SIGHTLINE's own screen — the evidence, not the advice.
  *
@@ -33,19 +31,10 @@ const CLOCK_INTERVAL_MS = 60_000
  * thing that justifies it.
  */
 export function SightlineWorkspace() {
-  // Null until mounted. The server runs in UTC and the reader is in IST, so a
-  // clock read during rendering renders one hour on the server and a different
-  // one in the browser — the hour has to come from the device, after mount.
-  const [now, setNow] = useState<Date | null>(null)
+  const now = useLiveClock()
   const [risk, setRisk] = useState<RiskSnapshot | null>(null)
 
   const hour = now?.getHours() ?? null
-
-  useEffect(() => {
-    setNow(new Date())
-    const tick = setInterval(() => setNow(new Date()), CLOCK_INTERVAL_MS)
-    return () => clearInterval(tick)
-  }, [])
 
   // Which patterns exist does not depend on the hour — only which of them are
   // awake does — so this loads once rather than on every tick of the clock.
@@ -58,7 +47,8 @@ export function SightlineWorkspace() {
 
   const awake =
     hour === null ? [] : (risk?.patterns.filter((pattern) => activeAtHour(pattern, hour)) ?? [])
-  const clock = hour === null ? '—' : `${String(hour).padStart(2, '0')}:00`
+  const clock = formatTime(now)
+  const band = hour === null ? '—' : `${String(hour).padStart(2, '0')}:00`
 
   return (
     <div className="flex flex-col gap-4">
@@ -109,8 +99,8 @@ export function SightlineWorkspace() {
               <p className="px-4 py-5 text-[12px] text-ops-muted">Reading the incident history…</p>
             ) : awake.length === 0 ? (
               <p className="px-4 py-5 text-[12px] leading-relaxed text-ops-muted">
-                No pattern covers {clock}. The ones this campus has run in the evening and late at
-                night — they are listed below with the hours they hold.
+                No pattern covers the {band} band. The ones this campus has run in the evening
+                and late at night — they are listed below with the hours they hold.
               </p>
             ) : (
               <ul className="divide-y divide-ops-border/60">

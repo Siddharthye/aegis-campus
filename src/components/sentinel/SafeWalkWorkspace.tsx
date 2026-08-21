@@ -12,6 +12,7 @@ import { describeRoute, type RiskPattern, type RouteRisk } from '@/domain/risk-m
 import { Campus25Map } from './Campus25Map'
 import { Chip, MiniBar, Panel, Stat } from '@/components/ui/Panel'
 import { SafeWalkPanel } from './SafeWalkPanel'
+import { formatTime, useLiveClock } from '@/components/ui/use-live-clock'
 
 /**
  * Safe Walk's own screen — route-centric, not form-centric.
@@ -23,17 +24,14 @@ import { SafeWalkPanel } from './SafeWalkPanel'
  */
 export function SafeWalkWorkspace() {
   const [walks, setWalks] = useState<SafeWalk[]>([])
-  const [now, setNow] = useState(() => new Date())
   const [risk, setRisk] = useState<{
     patterns: RiskPattern[]
     routes: RouteRisk[]
   } | null>(null)
   const [pickedDestination, setPickedDestination] = useState('')
-  // Derived from the ticking clock rather than read during rendering: the
-  // server runs in UTC and the reader is in IST, so an hour computed while
-  // rendering disagrees with itself across hydration.
-  const [hour, setHour] = useState<number | null>(null)
-  useEffect(() => setHour(now.getHours()), [now])
+
+  const now = useLiveClock()
+  const hour = now?.getHours() ?? null
 
   const refresh = useCallback(async () => {
     const response = await fetch('/api/safe-walk')
@@ -61,11 +59,7 @@ export function SafeWalkWorkspace() {
   useEffect(() => {
     void refresh()
     const poll = setInterval(() => void refresh(), 10_000)
-    const clock = setInterval(() => setNow(new Date()), 1000)
-    return () => {
-      clearInterval(poll)
-      clearInterval(clock)
-    }
+    return () => clearInterval(poll)
   }, [refresh])
 
   const active = walks.filter((walk) => walk.status === 'walking')
@@ -131,7 +125,7 @@ export function SafeWalkWorkspace() {
           ) : (
             <ul className="divide-y divide-ops-border/60">
               {walks.slice(0, 6).map((walk) => {
-                const missed = missedCheckIns(walk, now)
+                const missed = now ? missedCheckIns(walk, now) : 0
                 return (
                   <li key={walk.id} className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -146,7 +140,7 @@ export function SafeWalkWorkspace() {
                     {walk.status === 'walking' && (
                       <div className="mt-2">
                         <MiniBar
-                          value={walkProgress(walk, now) * 100}
+                          value={now ? walkProgress(walk, now) * 100 : 0}
                           max={100}
                           tone={missed >= 1 ? 'danger' : 'accent'}
                         />
@@ -230,7 +224,7 @@ export function SafeWalkWorkspace() {
           label="Which way to walk"
           tone={risk && risk.routes[0] && risk.routes[0].risk >= 0.55 ? 'danger' : 'accent'}
           aside={
-            <Chip tone="accent">{hour === null ? '—' : `${String(hour).padStart(2, '0')}:00`}</Chip>
+            <Chip tone="accent">{formatTime(now)}</Chip>
           }
         >
           {!risk ? (
