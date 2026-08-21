@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { NexbotAvatar } from '@/components/nexbot/NexbotAvatar'
+import { SplineRobot } from '@/components/nexbot/SplineRobot'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -14,27 +14,27 @@ const CAPABILITIES = [
 ]
 
 /**
- * The NEXBOT section — the ops copilot, and the one moment on the landing page
- * where the product looks back at you.
- *
- * The claim being made here is the unusual one: this assistant answers with no
- * model behind it. Every response is computed from the live incident store, so
- * it is instant, costs nothing, and works in a basement with the wifi off.
+ * The NEXBOT section — Spline stage on the left (towerz pattern), copy on the
+ * right. The claim being made here is the unusual one: this assistant answers
+ * with no model behind it.
  */
 export function NexbotShowcase() {
   return (
     <section className="relative overflow-hidden py-28">
       <div className="glow-accent absolute inset-0 opacity-60" />
 
-      <div className="relative mx-auto grid max-w-5xl items-center gap-12 px-6 md:grid-cols-[auto_1fr]">
+      <div className="relative mx-auto grid max-w-5xl items-center gap-12 px-6 md:grid-cols-[1.05fr_1fr]">
         <motion.div
-          initial={{ opacity: 0, scale: 0.86 }}
+          initial={{ opacity: 0, scale: 0.92 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.7, ease: EASE }}
-          className="mx-auto"
+          className="relative mx-auto w-full"
         >
-          <NexbotAvatar size={190} />
+          <div className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-2xl border border-ops-border bg-ops-deep mx-auto shadow-[0_0_60px_rgba(56,189,248,0.12)]">
+            <SplineRobot className="absolute inset-0 size-full" fallbackSize={160} />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,transparent_35%,rgba(5,7,13,0.55)_100%)]" />
+          </div>
         </motion.div>
 
         <motion.div
@@ -79,7 +79,7 @@ export function NexbotShowcase() {
               Open the NEXBOT console →
             </a>
             <p className="text-[12px] text-ops-faint">
-              Or tap the robot in the corner — it is already watching your cursor.
+              Or tap the robot in the corner — it tracks your cursor.
             </p>
           </div>
         </motion.div>

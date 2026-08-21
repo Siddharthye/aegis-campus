@@ -18,16 +18,6 @@ const NAV_LINKS = [
   { href: '/wanted', label: 'Wanted' },
 ]
 
-/**
- * Two sellable modules peek over the slab's bottom edge, flanking the dock
- * the way the reference flanks its centre hub — the third is the reason to
- * scroll to the module grid.
- */
-const PEEK_MODULES = [
-  { name: 'SIREN', role: 'Geofenced alerts · REST + SSE', price: '₹5.00 Cr' },
-  { name: 'ATLAS', role: 'Live map + triage engine', price: '₹5.00 Cr' },
-]
-
 interface LiveStats {
   openIncidents: number
   respondersAvailable: number
@@ -117,7 +107,7 @@ export function Hero() {
         {/* Editorial copy left, live numbers right. */}
         <motion.div
           style={{ y: copyY, opacity: fade }}
-          className="relative z-10 grid flex-1 content-center gap-10 px-6 sm:px-10 lg:grid-cols-[1.5fr_1fr] lg:gap-6 lg:px-14"
+          className="relative z-10 grid flex-1 content-center gap-10 px-6 pb-16 sm:px-10 lg:grid-cols-[1.5fr_1fr] lg:gap-8 lg:px-14"
         >
           <div className="max-w-2xl">
             <motion.p
@@ -214,38 +204,8 @@ export function Hero() {
           </motion.aside>
         </motion.div>
 
-        {/* Modules peeking over the fold — deliberately cut by the slab edge. */}
-        <motion.div
-          style={{ opacity: fade }}
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 1.05, ease: EASE }}
-          className="relative z-10 hidden translate-y-[34%] grid-cols-[1fr_minmax(420px,0.8fr)_1fr] gap-4 px-10 sm:grid lg:px-14"
-        >
-          <PeekCard module={PEEK_MODULES[0]} />
-          {/* The dock owns this middle bay, exactly like the reference hub. */}
-          <span aria-hidden />
-          <PeekCard module={PEEK_MODULES[1]} />
-        </motion.div>
       </motion.div>
     </section>
-  )
-}
-
-function PeekCard({ module }: { module: (typeof PEEK_MODULES)[number] }) {
-  return (
-    <Link
-      href="#modules"
-      className="glass-chrome group rounded-t-2xl p-4 transition-colors hover:border-ops-accent/30"
-    >
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono text-sm font-bold tracking-wide text-ops-text">
-          {module.name}
-        </span>
-        <span className="ops-label text-ops-accent">{module.price}</span>
-      </div>
-      <p className="mt-1 text-[12px] text-ops-muted">{module.role}</p>
-    </Link>
   )
 }
 

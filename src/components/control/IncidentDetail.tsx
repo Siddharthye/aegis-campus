@@ -59,7 +59,7 @@ export function IncidentDetail({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3">
       <header className="rounded-lg border border-ops-border bg-ops-panel p-4">
         <div className="flex flex-wrap items-center gap-2">
           <SeverityBadge severity={incident.severity} />
@@ -70,7 +70,7 @@ export function IncidentDetail({
         <h2 className="mt-2 text-[15px] font-semibold text-ops-text">{incident.title}</h2>
         <p className="mt-1 text-[12px] leading-relaxed text-ops-muted">{incident.description}</p>
 
-        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-ops-border pt-3 sm:grid-cols-4">
+        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-ops-border pt-3 sm:grid-cols-4 [&>*]:min-w-0">
           <Fact label="Location" value={incident.location.label} />
           <Fact
             label="Confidence"

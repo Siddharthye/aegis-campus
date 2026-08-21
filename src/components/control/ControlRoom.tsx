@@ -97,15 +97,15 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,0.9fr)]">
-      <div className="flex flex-col gap-3">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,0.9fr)]">
+      <div className="flex min-w-0 flex-col gap-3">
         <p className="ops-label text-ops-muted">
           Queue · {queue.length} open · ranked by SLA pressure
         </p>
         <IncidentQueue entries={queue} selectedId={selectedId} onSelect={setSelectedId} />
       </div>
 
-      <div>
+      <div className="min-w-0">
         {selected ? (
           <IncidentDetail
             incident={selected}
@@ -128,7 +128,7 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex min-w-0 flex-col gap-3">
         <SentinelLane />
         <DrillPanel onPipelineChange={() => void refreshIncidents()} />
         <IntegrationSlot kind="sensor-feed" label="Sensor feed" showWhenEmpty />

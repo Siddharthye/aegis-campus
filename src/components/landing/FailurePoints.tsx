@@ -53,7 +53,7 @@ export function FailurePoints() {
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] })
 
   return (
-    <section ref={sectionRef} className="relative" style={{ height: `${FAILURES.length * 120}vh` }}>
+    <section ref={sectionRef} className="relative" style={{ height: `${FAILURES.length * 140}vh` }}>
       <div className="sticky top-0 flex h-[100svh] flex-col overflow-hidden">
         <div className="glow-danger absolute inset-0" />
 
@@ -64,7 +64,7 @@ export function FailurePoints() {
           </h2>
         </header>
 
-        <div className="relative z-10 mx-auto grid w-full max-w-5xl flex-1 items-center px-6">
+        <div className="relative z-10 mx-auto grid min-h-[26rem] w-full max-w-5xl flex-1 items-center px-6">
           {FAILURES.map((failure, index) => (
             <Panel
               key={failure.index}
@@ -95,22 +95,56 @@ interface PanelProps {
 }
 
 function Panel({ failure, index, total, progress }: PanelProps) {
-  /* Each panel owns one slice of scroll: fade+rise in, hold, fade+drift out. */
-  const start = index / total
-  const end = (index + 1) / total
-  const margin = 0.18 / total
+  /*
+   * Each panel owns one slice of scroll and is driven by an explicit function
+   * of progress rather than a keyframe array.
+   *
+   * The keyframe form was subtly wrong here: with four control points and a
+   * flat hold in the middle, the first panel interpolated across the whole
+   * range instead of clamping, so it faded back *in* as you scrolled and two
+   * panels were visible at once. Computing the local 0–1 position and
+   * branching on it is longer, but it says exactly what it does.
+   */
+  const slice = 1 / total
+  const start = index * slice
+  const fadePortion = 0.2
 
-  const opacity = useTransform(
-    progress,
-    [start, start + margin, end - margin, end],
-    [index === 0 ? 1 : 0, 1, 1, index === total - 1 ? 1 : 0],
-  )
-  const y = useTransform(progress, [start, start + margin, end - margin, end], [40, 0, 0, -40])
+  const first = index === 0
+  const last = index === total - 1
+
+  /** Where progress sits inside this panel's own slice: <0 before, >1 after. */
+  const localPosition = (value: number) => (value - start) / slice
+
+  const opacity = useTransform(progress, (value) => {
+    const local = localPosition(value)
+    if (local < 0) return first ? 1 : 0
+    if (local > 1) return last ? 1 : 0
+    if (local < fadePortion) return first ? 1 : local / fadePortion
+    if (local > 1 - fadePortion) return last ? 1 : (1 - local) / fadePortion
+    return 1
+  })
+
+  const y = useTransform(progress, (value) => {
+    const local = localPosition(value)
+    if (local < 0) return first ? 0 : 28
+    if (local > 1) return last ? 0 : -28
+    if (local < fadePortion) return first ? 0 : 28 * (1 - local / fadePortion)
+    if (local > 1 - fadePortion) return last ? 0 : -28 * (1 - (1 - local) / fadePortion)
+    return 0
+  })
+
+  /*
+   * Hidden panels are stacked in the same grid cell, so they would still take
+   * hover and clicks while invisible. Gating pointer events on opacity keeps
+   * only the visible panel interactive.
+   */
+  const pointerEvents = useTransform(opacity, (value) => (value > 0.5 ? 'auto' : 'none'))
 
   return (
     <motion.article
-      style={{ opacity, y }}
-      className="col-start-1 row-start-1 grid gap-8 sm:grid-cols-[auto_1fr] sm:gap-14"
+      style={{ opacity, y, pointerEvents }}
+      aria-hidden={undefined}
+      className="col-start-1 row-start-1 grid items-start gap-8 sm:grid-cols-[auto_1fr] sm:gap-14"
     >
       <div className={`font-mono text-7xl font-bold tracking-tighter sm:text-9xl ${failure.color}`}>
         {failure.index}

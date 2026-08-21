@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { EvidenceItem } from '@/domain/evidence'
 import type { Incident, IncidentCategory, LocatedPosition, Severity } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
@@ -19,11 +19,19 @@ type Step = 'category' | 'location' | 'review'
  * is offered on the last step and pre-filled, so the fast path stays three
  * taps and the thorough path is still available.
  */
-export function ReportWizard() {
+interface ReportWizardProps {
+  /**
+   * Location chosen elsewhere — currently the 3D floor plan. Adopted as the
+   * report's location so picking a room and filling the form are one flow.
+   */
+  presetLocation?: LocatedPosition | null
+}
+
+export function ReportWizard({ presetLocation = null }: ReportWizardProps = {}) {
   const [step, setStep] = useState<Step>('category')
   const [category, setCategory] = useState<IncidentCategory | null>(null)
   const [severity, setSeverity] = useState<Severity>('P2')
-  const [location, setLocation] = useState<LocatedPosition | null>(null)
+  const [location, setLocation] = useState<LocatedPosition | null>(presetLocation)
   const [description, setDescription] = useState('')
   const [anonymous, setAnonymous] = useState(false)
   const [evidence, setEvidence] = useState<EvidenceItem[]>([])
@@ -33,6 +41,10 @@ export function ReportWizard() {
   const [sending, setSending] = useState(false)
   const [queuedOffline, setQueuedOffline] = useState(false)
   const { queue, queued, online } = useOfflineQueue()
+
+  useEffect(() => {
+    if (presetLocation) setLocation(presetLocation)
+  }, [presetLocation])
 
   const chooseCategory = (option: (typeof CATEGORY_OPTIONS)[number]) => {
     setCategory(option.category)

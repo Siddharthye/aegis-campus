@@ -27,6 +27,7 @@ interface PaletteAction {
 
 const PAGES: PaletteAction[] = [
   { id: 'report', title: 'Report an emergency', hint: 'Reporter', keywords: 'file incident siren', href: '/report' },
+  { id: 'safe-walk', title: 'Safe Walk', hint: 'Reporter', keywords: 'walk home night escort check in', href: '/safe-walk' },
   { id: 'control', title: 'Control Room', hint: 'Dispatcher', keywords: 'queue dispatch drill broadcast', href: '/control' },
   { id: 'respond', title: 'My assignment', hint: 'Responder', keywords: 'respond eta', href: '/respond' },
   { id: 'analytics', title: 'PULSE analytics', hint: 'Admin', keywords: 'heatmap patrol sla hotspots', href: '/analytics' },

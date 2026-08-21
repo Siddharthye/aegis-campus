@@ -1,21 +1,22 @@
-import { BeaconPrinter } from '@/components/beacon/BeaconPrinter'
+import { BeaconExplorer } from '@/components/beacon/BeaconExplorer'
 import { OpsShell } from '@/components/ops/OpsShell'
 import { listAnchorBuildings } from '@/lib/beacon-service'
 
 export const metadata = { title: 'BEACON Anchors — AEGIS' }
 
 /**
- * The BEACON deployment surface. The anchor registry is derived from campus
- * footprint data, so it is computed on the server and can never drift from
- * what the printed sheets say.
+ * The BEACON deployment surface. Several hundred codes exist, so this is a
+ * filtered registry with a selected-anchor detail rather than a wall of QR
+ * images — printing is one action inside it.
  */
 export default function BeaconPage() {
   return (
     <OpsShell
       title="BEACON anchors"
-      subtitle="Print these, tape them to stairwells and corridors. Scanning one locates a report to the floor."
+      subtitle="Printed codes that resolve a report to building, floor and room at 99% confidence — where GPS gives a ±30m blur and no floor at all."
+      wide
     >
-      <BeaconPrinter buildings={listAnchorBuildings()} />
+      <BeaconExplorer buildings={listAnchorBuildings()} />
     </OpsShell>
   )
 }

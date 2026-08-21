@@ -1,28 +1,24 @@
 import { OpsShell } from '@/components/ops/OpsShell'
-import { ReportWizard } from '@/components/report/ReportWizard'
-import { IntegrationSlot } from '@/integrations/slots'
-import { SafeWalkPanel } from '@/components/sentinel/SafeWalkPanel'
+import { ReportWorkspace } from '@/components/report/ReportWorkspace'
 import { SentinelTrigger } from '@/components/sentinel/SentinelTrigger'
 
 export const metadata = { title: 'Report — AEGIS' }
 
 /**
- * The reporter seat. Three taps to file an incident — and, for anyone who
- * cannot safely be seen filing one, a triple-tap anywhere on this screen arms
- * SENTINEL and replaces it with a decoy calculator.
+ * The reporter's seat: the floor you are standing on, and the form.
+ *
+ * Safe Walk lives on its own screen — it is a different workflow with a
+ * different shape, and folding it in here made both feel like half a page.
  */
 export default function ReportPage() {
   return (
     <OpsShell
       title="Report an emergency"
-      subtitle="Three taps. Triple-tap anywhere on this screen to arm a silent alarm instead."
+      subtitle="Pick the room on the plan, or use a QR anchor. Triple-tap anywhere to arm a silent alarm instead."
+      wide
     >
       <SentinelTrigger>
-        <div className="mx-auto flex max-w-lg flex-col gap-5">
-          <ReportWizard />
-          <SafeWalkPanel />
-          <IntegrationSlot kind="intake-channel" label="Other ways to report" showWhenEmpty />
-        </div>
+        <ReportWorkspace />
       </SentinelTrigger>
     </OpsShell>
   )

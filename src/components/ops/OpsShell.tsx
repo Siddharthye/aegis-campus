@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Nexbot } from '@/components/nexbot/Nexbot'
 
 interface OpsShellProps {
@@ -6,39 +5,65 @@ interface OpsShellProps {
   subtitle?: string
   /** Right-aligned header extras (live clocks, action buttons). */
   actions?: React.ReactNode
+  /** Small stat chips rendered beside the title — cheap density, no cards. */
+  meta?: React.ReactNode
+  /**
+   * Full-bleed stage (NEXBOT console): no padded content column, no page
+   * title block — the child owns the viewport under the dock.
+   */
+  immersive?: boolean
+  /** Wider than the default column, for map- and console-heavy screens. */
+  wide?: boolean
   children: React.ReactNode
 }
 
 /**
- * The chrome every ops screen shares: a slim glass header and NEXBOT.
- * Navigation lives in the dock, mounted globally — so the header carries
- * identity and status, nothing else. Bottom padding keeps content clear of
- * the dock.
+ * The chrome every ops screen shares.
+ *
+ * There is deliberately no top navigation bar: the dock is the navigation, and
+ * a second persistent bar above the content only stole vertical space from the
+ * screens that need it most. What remains is an inline title row that scrolls
+ * away with the page.
  */
-export function OpsShell({ title, subtitle, actions, children }: OpsShellProps) {
+export function OpsShell({
+  title,
+  subtitle,
+  actions,
+  meta,
+  immersive = false,
+  wide = false,
+  children,
+}: OpsShellProps) {
+  if (immersive) {
+    return (
+      <div className="relative min-h-screen bg-ops-bg">
+        {children}
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-ops-bg">
-      <header className="sticky top-0 z-40 border-b border-ops-border/70 bg-ops-deep/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="font-mono text-sm font-bold tracking-widest text-ops-text">AEGIS</span>
-          </Link>
+      <div
+        className={`mx-auto w-full flex-1 px-4 pb-36 pt-6 sm:px-6 ${wide ? 'max-w-[1600px]' : 'max-w-7xl'}`}
+      >
+        <header className="mb-5 flex flex-wrap items-end gap-x-5 gap-y-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">{title}</h1>
+              <span className="ops-label flex shrink-0 items-center gap-1.5 text-emerald-400">
+                <span className="siren-pulse size-1.5 rounded-full bg-current" /> LIVE
+              </span>
+            </div>
+            {subtitle && (
+              <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-ops-muted">{subtitle}</p>
+            )}
+          </div>
 
-          <span className="hidden h-4 w-px bg-ops-border sm:block" />
-          <span className="ops-label hidden text-ops-faint sm:block">{title}</span>
+          {meta && <div className="flex flex-wrap items-center gap-2">{meta}</div>}
+          {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+        </header>
 
-          <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[10px] text-emerald-400">
-            <span className="siren-pulse size-1.5 rounded-full bg-current" /> LIVE
-          </span>
-          {actions}
-        </div>
-      </header>
-
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-32 pt-5">
-        <div className="mb-5">
-          <h1 className="text-lg font-bold tracking-tight">{title}</h1>
-          {subtitle && <p className="mt-0.5 text-[12px] text-ops-muted">{subtitle}</p>}
-        </div>
         {children}
       </div>
 

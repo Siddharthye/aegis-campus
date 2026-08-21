@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   description:
     'Report in three taps. Locate to the room. Fuse fifty duplicate reports into one incident. Dispatch the nearest responder with a live SLA clock. Every second, accounted for.',
   manifest: '/manifest.webmanifest',
+  icons: { icon: '/icon.svg', apple: '/icon.svg' },
   appleWebApp: { capable: true, title: 'AEGIS', statusBarStyle: 'black-translucent' },
 }
 

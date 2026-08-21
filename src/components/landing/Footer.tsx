@@ -56,7 +56,7 @@ export function Footer() {
         ))}
       </div>
 
-      <div className="border-t border-ops-border/40">
+      <div className="border-t border-ops-border/40 pb-24">
         <p className="ops-label mx-auto max-w-6xl px-6 py-5 text-ops-faint">
           HA-040-7800 · BUILD. BUY. SELL. EXIT.
         </p>
