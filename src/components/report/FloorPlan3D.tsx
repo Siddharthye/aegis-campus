@@ -35,8 +35,8 @@ const WALL_DEPTH = 1.6
 
 const KIND_STYLE: Record<SpaceKind, { fill: string; stroke: string; label: string }> = {
   room: { fill: 'rgb(30 41 59 / 0.9)', stroke: 'rgb(71 85 105)', label: 'Rooms' },
-  lecture: { fill: 'rgb(56 189 248 / 0.16)', stroke: 'rgb(56 189 248 / 0.55)', label: 'Lecture theatres' },
-  office: { fill: 'rgb(56 189 248 / 0.1)', stroke: 'rgb(56 189 248 / 0.4)', label: 'Offices' },
+  lecture: { fill: 'rgb(167 139 250 / 0.16)', stroke: 'rgb(167 139 250 / 0.55)', label: 'Lecture theatres' },
+  office: { fill: 'rgb(167 139 250 / 0.1)', stroke: 'rgb(167 139 250 / 0.4)', label: 'Offices' },
   lift: { fill: 'rgb(234 179 8 / 0.16)', stroke: 'rgb(234 179 8 / 0.5)', label: 'Lifts' },
   stairs: { fill: 'rgb(249 115 22 / 0.16)', stroke: 'rgb(249 115 22 / 0.5)', label: 'Stairs' },
   washroom: { fill: 'rgb(100 116 139 / 0.22)', stroke: 'rgb(100 116 139 / 0.6)', label: 'Washrooms' },
@@ -124,7 +124,7 @@ export function FloorPlan3D({
             height={PLAN_SIZE + 8}
             rx={3}
             fill="rgb(8 12 20 / 0.85)"
-            stroke="rgb(56 189 248 / 0.14)"
+            stroke="rgb(167 139 250 / 0.14)"
             strokeWidth={0.3}
           />
 
@@ -136,8 +136,8 @@ export function FloorPlan3D({
               y={corridor.y}
               width={corridor.w}
               height={corridor.h}
-              fill="rgb(56 189 248 / 0.1)"
-              stroke="rgb(56 189 248 / 0.2)"
+              fill="rgb(167 139 250 / 0.1)"
+              stroke="rgb(167 139 250 / 0.2)"
               strokeWidth={0.15}
             />
           ))}
@@ -201,12 +201,12 @@ function SpaceBlock({ space, selected, active, dimmed, onHover, onSelect }: Spac
   const lift = selected ? WALL_DEPTH * 2.4 : active ? WALL_DEPTH * 1.6 : WALL_DEPTH
 
   const fill = selected
-    ? 'rgb(56 189 248 / 0.45)'
+    ? 'rgb(167 139 250 / 0.45)'
     : active
       ? 'rgb(239 68 68 / 0.35)'
       : style.fill
   const stroke = selected
-    ? 'rgb(56 189 248)'
+    ? 'rgb(167 139 250)'
     : active
       ? 'rgb(239 68 68 / 0.9)'
       : style.stroke

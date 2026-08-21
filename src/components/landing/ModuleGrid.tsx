@@ -120,7 +120,7 @@ function TiltCard({ module, index }: { module: (typeof MODULES)[number]; index: 
           style={{
             background: useTransform(
               [glareX, glareY],
-              ([gx, gy]) => `radial-gradient(280px circle at ${gx} ${gy}, rgb(56 189 248 / 0.10), transparent 65%)`,
+              ([gx, gy]) => `radial-gradient(280px circle at ${gx} ${gy}, rgb(167 139 250 / 0.10), transparent 65%)`,
             ),
           }}
         />

@@ -45,7 +45,7 @@ export function Panel({
   const background = useTransform(
     [mx, my],
     ([x, y]) =>
-      `radial-gradient(340px circle at ${x}px ${y}px, rgb(56 189 248 / 0.07), transparent 68%)`,
+      `radial-gradient(340px circle at ${x}px ${y}px, rgb(167 139 250 / 0.07), transparent 68%)`,
   )
 
   const track = (event: React.PointerEvent) => {
