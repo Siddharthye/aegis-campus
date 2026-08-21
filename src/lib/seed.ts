@@ -55,7 +55,7 @@ export const seedIncidents: Incident[] = [
     createdAt: at(6),
     resolvedAt: null,
     timeline: [
-      { at: at(6), actor: 'student-2214', action: 'reported', detail: 'Via QR anchor LIB-G-01' },
+      { at: at(6), actor: 'student-2214', action: 'reported', detail: 'Picked Central Library · Main entrance on the plan' },
       { at: at(5), actor: 'system', action: 'triaged', detail: 'P1 — medical, 3 corroborating reports' },
     ],
     evidence: [],

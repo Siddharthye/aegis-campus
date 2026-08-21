@@ -14,7 +14,7 @@ export default function ReportPage() {
   return (
     <OpsShell
       title="Report an emergency"
-      subtitle="Pick the room on the plan, or use a QR anchor. Triple-tap anywhere to arm a silent alarm instead."
+      subtitle="Pick the room on the plan or drop a pin on the campus map. Triple-tap anywhere to arm a silent alarm instead."
       wide
     >
       <SentinelTrigger>

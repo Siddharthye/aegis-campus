@@ -21,11 +21,11 @@ const FAILURES = [
   },
   {
     index: '02',
-    problem: 'Nobody knows exactly where.',
-    answer: 'GPS is useless indoors. Anchors aren’t.',
+    problem: 'The third person to be followed there learns nothing from the first two.',
+    answer: 'Reports go in separately. The pattern comes back out.',
     detail:
-      'Raw GPS is ±30 metres with no concept of a floor. BEACON’s printed QR anchors resolve to building, floor, and room at 99% confidence — and the confidence is shown, honestly, on every incident.',
-    module: 'BEACON',
+      'Every report reaches the control room alone, so the place that keeps producing them stays invisible to the next person walking through it. SIGHTLINE clusters reports by place and hour, requires them to come from different people, and ranks tonight’s routes by what has actually been reported — the one thing a live-location share can never tell you.',
+    module: 'SIGHTLINE',
     color: 'text-sev-p1',
   },
   {

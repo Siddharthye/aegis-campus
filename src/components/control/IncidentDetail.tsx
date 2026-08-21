@@ -19,6 +19,19 @@ const NEXT_STATUS: Partial<Record<IncidentStatus, IncidentStatus>> = {
   'on-scene': 'resolved',
 }
 
+/**
+ * The three things a dispatcher does with an incident, in the order they do
+ * them. Stacking all three at once made the console taller than a screen,
+ * which is the one shape an emergency console must never take.
+ */
+const TABS = [
+  { id: 'dispatch', label: 'Dispatch' },
+  { id: 'broadcast', label: 'Broadcast' },
+  { id: 'trail', label: 'Trail' },
+] as const
+
+type TabId = (typeof TABS)[number]['id']
+
 interface IncidentDetailProps {
   incident: Incident
   recommendations: DispatchRecommendation[]
@@ -39,6 +52,7 @@ export function IncidentDetail({
   onBroadcast,
 }: IncidentDetailProps) {
   const [broadcastMessage, setBroadcastMessage] = useState('')
+  const [tab, setTab] = useState<TabId>('dispatch')
   const [busy, setBusy] = useState(false)
   const nextStatus = NEXT_STATUS[incident.status]
 
@@ -56,6 +70,12 @@ export function IncidentDetail({
     if (!message) return
     await run(() => onBroadcast(message))
     setBroadcastMessage('')
+  }
+
+  /** Loading a template is only useful if the box it fills is on screen. */
+  const composeBroadcast = (text: string) => {
+    setBroadcastMessage(text)
+    setTab('broadcast')
   }
 
   return (
@@ -77,10 +97,7 @@ export function IncidentDetail({
             value={`${Math.round(incident.location.confidence * 100)}% · ${incident.location.method}`}
           />
           <Fact label="Reports" value={String(incident.reportCount)} />
-          <Fact
-            label="Reporter"
-            value={incident.reporterId ?? 'Anonymous'}
-          />
+          <Fact label="Reporter" value={incident.reporterId ?? 'Anonymous'} />
         </dl>
 
         {nextStatus && (
@@ -95,72 +112,96 @@ export function IncidentDetail({
         )}
       </header>
 
-      {recommendations.length > 0 && (
-        <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
-          <p className="ops-label text-ops-muted">Dispatch recommendations</p>
-          <ul className="mt-2 flex flex-col gap-1.5">
-            {recommendations.slice(0, 3).map(({ responder, etaMinutes, reason }) => (
-              <li
-                key={responder.id}
-                className="flex items-center gap-3 rounded-md border border-ops-border bg-ops-bg p-2.5"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-medium text-ops-text">
-                    {responder.name}
-                    <span className="ml-1.5 text-ops-faint">{responder.unit}</span>
-                  </p>
-                  <p className="truncate text-[11px] text-ops-muted">{reason}</p>
-                </div>
-                <span className="ops-label shrink-0 text-ops-accent">ETA {etaMinutes}m</span>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => run(() => onAssign(responder.id))}
-                  className="shrink-0 rounded-md border border-ops-accent/40 bg-ops-accent/10 px-2.5 py-1 text-[11px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20 disabled:opacity-50"
-                >
-                  Dispatch
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className="flex gap-1 rounded-lg border border-ops-border bg-ops-panel p-1">
+        {TABS.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            aria-current={tab === entry.id ? 'page' : undefined}
+            onClick={() => setTab(entry.id)}
+            className={`ops-label flex-1 rounded-md px-3 py-2 transition-colors ${
+              tab === entry.id
+                ? 'bg-ops-accent/15 text-ops-accent'
+                : 'text-ops-faint hover:bg-ops-lift hover:text-ops-muted'
+            }`}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'dispatch' && (
+        <>
+          {recommendations.length > 0 && (
+            <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
+              <p className="ops-label text-ops-muted">Dispatch recommendations</p>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {recommendations.slice(0, 3).map(({ responder, etaMinutes, reason }) => (
+                  <li
+                    key={responder.id}
+                    className="flex items-center gap-3 rounded-md border border-ops-border bg-ops-bg p-2.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[12px] font-medium text-ops-text">
+                        {responder.name}
+                        <span className="ml-1.5 text-ops-faint">{responder.unit}</span>
+                      </p>
+                      <p className="truncate text-[11px] text-ops-muted">{reason}</p>
+                    </div>
+                    <span className="ops-label shrink-0 text-ops-accent">ETA {etaMinutes}m</span>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => run(() => onAssign(responder.id))}
+                      className="shrink-0 rounded-md border border-ops-accent/40 bg-ops-accent/10 px-2.5 py-1 text-[11px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20 disabled:opacity-50"
+                    >
+                      Dispatch
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <EvidenceStrip evidence={incident.evidence} />
+          <AssignedUnits incident={incident} />
+        </>
       )}
 
-      <EvidenceStrip evidence={incident.evidence} />
+      {tab === 'broadcast' && (
+        <>
+          <EvacuationPanel incident={incident} onUseInstruction={composeBroadcast} />
+          <BroadcastComposer incident={incident} onUseTemplate={composeBroadcast} />
 
-      <AssignedUnits incident={incident} />
+          <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
+            <p className="ops-label text-ops-muted">Geofenced broadcast</p>
+            <div className="mt-2 flex gap-2">
+              <input
+                value={broadcastMessage}
+                onChange={(event) => setBroadcastMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') void sendBroadcast()
+                }}
+                placeholder="Evacuate via the west stairwell. Do not use lifts."
+                className="min-w-0 flex-1 rounded-md border border-ops-border bg-ops-bg px-2.5 py-1.5 text-[12px] text-ops-text placeholder:text-ops-faint focus:border-ops-accent/50 focus:outline-none"
+              />
+              <button
+                type="button"
+                disabled={busy || broadcastMessage.trim().length === 0}
+                onClick={() => void sendBroadcast()}
+                className="shrink-0 rounded-md bg-sev-p0 px-3 py-1.5 text-[12px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                Broadcast
+              </button>
+            </div>
+            <p className="mt-1.5 text-[11px] text-ops-faint">
+              Delivered by SIREN to everyone inside the incident geofence.
+            </p>
+          </section>
+        </>
+      )}
 
-      <EvacuationPanel incident={incident} onUseInstruction={setBroadcastMessage} />
-
-      <BroadcastComposer incident={incident} onUseTemplate={setBroadcastMessage} />
-
-      <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
-        <p className="ops-label text-ops-muted">Geofenced broadcast</p>
-        <div className="mt-2 flex gap-2">
-          <input
-            value={broadcastMessage}
-            onChange={(event) => setBroadcastMessage(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') void sendBroadcast()
-            }}
-            placeholder="Evacuate via the west stairwell. Do not use lifts."
-            className="min-w-0 flex-1 rounded-md border border-ops-border bg-ops-bg px-2.5 py-1.5 text-[12px] text-ops-text placeholder:text-ops-faint focus:border-ops-accent/50 focus:outline-none"
-          />
-          <button
-            type="button"
-            disabled={busy || broadcastMessage.trim().length === 0}
-            onClick={() => void sendBroadcast()}
-            className="shrink-0 rounded-md bg-sev-p0 px-3 py-1.5 text-[12px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-          >
-            Broadcast
-          </button>
-        </div>
-        <p className="mt-1.5 text-[11px] text-ops-faint">
-          Delivered by SIREN to everyone inside the incident geofence.
-        </p>
-      </section>
-
-      <IncidentTimeline entries={incident.timeline} />
+      {tab === 'trail' && <IncidentTimeline entries={incident.timeline} />}
     </div>
   )
 }

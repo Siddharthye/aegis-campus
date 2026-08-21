@@ -1,6 +1,6 @@
 const CAPABILITIES = [
   'Geofenced broadcast',
-  'Room-level QR anchors',
+  'Risk-aware night routing',
   'Duplicate report fusion',
   'Silent panic mode',
   'Live SLA clocks',

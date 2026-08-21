@@ -23,8 +23,8 @@ import { MapViewport } from '@/components/ui/MapViewport'
  * transform rather than ninety re-layouts.
  *
  * Picking a room here is a *location*, not a decoration — it becomes the
- * incident's position at room-level precision, which is the whole BEACON
- * argument made visible.
+ * incident's position at room-level precision — the difference between
+ * dispatching to a building and dispatching to a door.
  */
 
 /** Plan space is 0–100; the SVG viewBox matches so nothing needs scaling. */

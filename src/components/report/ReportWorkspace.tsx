@@ -25,9 +25,8 @@ const PIPELINE_EVENTS = ['incident.created', 'incident.updated'] as const
  * The reporter's workspace: the floor you are standing on, and the form.
  *
  * The plan is the centrepiece rather than an illustration — picking a room
- * sets the incident's location at room-level precision, which is exactly the
- * argument BEACON makes with printed anchors, made visible for anyone who
- * would rather point than type a code.
+ * sets the incident's location at room-level precision, for anyone who would
+ * rather point at where they are than describe it.
  */
 export function ReportWorkspace() {
   const [selection, setSelection] = useState<FloorSelection | null>(null)
@@ -66,9 +65,9 @@ export function ReportWorkspace() {
   }, [open, spaces])
 
   /**
-   * A room pick becomes a real located position. Confidence sits between a
-   * scanned QR anchor and a map tap: the reporter named the room, but nothing
-   * physically verified they are in it.
+   * A room pick becomes a real located position. Confidence is high but not
+   * certain: the reporter named the room, and nothing physically verified they
+   * are standing in it.
    */
   const pickedLocation: LocatedPosition | null = selection
     ? {
@@ -199,14 +198,15 @@ export function ReportWorkspace() {
                     `${selection.space.wing} Block · Floor ${selection.floor} · ${selection.space.kind}`}
                 </p>
                 <p className="mt-2 text-[11px] leading-relaxed text-ops-faint">
-                  Picked from the plan. Scanning the printed QR anchor in this room raises it to
-                  99% — the difference between &ldquo;said the room&rdquo; and &ldquo;stood in it&rdquo;.
+                  Picked from the plan, so the room is named rather than guessed. Confidence
+                  stays at 85% — the difference between &ldquo;said the room&rdquo; and
+                  &ldquo;stood in it&rdquo; is one AEGIS refuses to hide.
                 </p>
               </>
             ) : (
               <p className="text-[12px] leading-relaxed text-ops-muted">
-                Tap a room on the plan to attach it to your report, or leave it and use a QR
-                anchor, the campus map, or GPS in the form below.
+                Tap a room on the plan to attach it to your report, or leave it and use the
+                campus map or GPS in the form below.
               </p>
             )}
           </div>

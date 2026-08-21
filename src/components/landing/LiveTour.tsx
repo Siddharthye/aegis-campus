@@ -17,7 +17,7 @@ const SCREENS = [
   },
   {
     label: 'THREE-TAP REPORT',
-    caption: 'Category → location → send. A QR anchor scan pins it to the exact room.',
+    caption: 'Category → location → send. Picking the room on the floor plan pins it to the exact space.',
     body: <ReportFrame />,
   },
   {
@@ -114,8 +114,8 @@ function ReportFrame() {
         ))}
       </div>
       <div className="rounded-lg border border-emerald-400/40 bg-emerald-400/5 px-3 py-2.5 text-[12px]">
-        <span className="ops-label mr-2 text-emerald-400">QR anchor</span>
-        Block C · Floor 3 · Room 302 — <span className="font-mono">99%</span>
+        <span className="ops-label mr-2 text-emerald-400">Floor plan</span>
+        Block C · Floor 3 · Room 302 — <span className="font-mono">85%</span>
       </div>
       <div className="rounded-lg bg-sev-p0 py-2.5 text-center text-[13px] font-bold text-white">
         SEND REPORT

@@ -116,7 +116,7 @@ export function askNexbot(
 
   if (/report|how do i|help/.test(q)) {
     return {
-      text: 'To report: three taps — category, location (scan a BEACON QR for room-level accuracy), send. For silent emergencies, triple-tap the shield to arm SENTINEL.',
+      text: 'To report: three taps — category, location (pick the room on the floor plan for room-level accuracy), send. For silent emergencies, triple-tap the shield to arm SENTINEL.',
       navigate: '/report',
     }
   }

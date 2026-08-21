@@ -52,7 +52,7 @@ export function BroadcastComposer({ incident, onUseTemplate }: BroadcastComposer
       </div>
 
       <ul className="mt-2.5 flex flex-col gap-1.5">
-        {templates.slice(0, 4).map((template) => {
+        {templates.slice(0, 3).map((template) => {
           const text =
             language === 'all'
               ? renderAllLanguages(template, place)
@@ -70,7 +70,7 @@ export function BroadcastComposer({ incident, onUseTemplate }: BroadcastComposer
                   <span className="ops-label ml-auto text-ops-faint">{template.severity}</span>
                 </span>
                 <span className="mt-1 block text-[11px] leading-relaxed text-ops-muted">
-                  {text.length > 150 ? `${text.slice(0, 147)}…` : text}
+                  {text.length > 96 ? `${text.slice(0, 93)}…` : text}
                 </span>
               </button>
             </li>

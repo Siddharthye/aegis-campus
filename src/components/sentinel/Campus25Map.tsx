@@ -13,36 +13,39 @@ import {
   type BlockKind,
   type Point,
 } from '@/data/campus25'
+import type { RiskPattern, RouteRisk } from '@/domain/risk-map'
 import type { SafeWalk } from '@/domain/safe-walk'
 import { MapViewport } from '@/components/ui/MapViewport'
 
 /**
- * Campus 25, drawn from real coordinates.
+ * Campus 25 — the map Safe Walk is built around.
  *
- * An equirectangular projection is exact enough across 500 metres and needs no
- * map library, no tiles and no network — which is what lets this work with the
- * wifi off. Everything on it is a place a student can name: Narendra Pond, the
- * archery field, KP-25, the ring road, the gates, and the lit routes between
- * them.
+ * Drawn from real coordinates with an equirectangular projection, which is
+ * exact enough across 500 metres and needs no tiles, no key and no network.
+ *
+ * The visual order is deliberate and matches how someone reads a map under
+ * stress: ground and water first, then roads, then buildings, then the things
+ * that carry meaning — risk, routes, gates, musters — each on its own layer
+ * above the base so nothing important is ever competing with scenery.
  */
 
 const VIEW_WIDTH = 900
-
-/** Just enough padding to keep edge labels inside the frame. */
 const PADDING = 0.04
 
 const BLOCK_STYLE: Record<BlockKind, { fill: string; stroke: string; label: string }> = {
-  academic: { fill: 'rgb(56 189 248 / 0.16)', stroke: 'rgb(56 189 248 / 0.6)', label: 'Academic block' },
-  admin: { fill: 'rgb(148 163 184 / 0.18)', stroke: 'rgb(148 163 184 / 0.55)', label: 'Administration' },
-  amenity: { fill: 'rgb(16 185 129 / 0.16)', stroke: 'rgb(16 185 129 / 0.5)', label: 'Amenity' },
-  hostel: { fill: 'rgb(234 179 8 / 0.16)', stroke: 'rgb(234 179 8 / 0.5)', label: 'Hostel' },
-  utility: { fill: 'rgb(100 116 139 / 0.16)', stroke: 'rgb(100 116 139 / 0.5)', label: 'Utility / parking' },
+  academic: { fill: '#1b2b45', stroke: '#38bdf8', label: 'Academic block' },
+  admin: { fill: '#232a38', stroke: '#94a3b8', label: 'Administration' },
+  amenity: { fill: '#16302a', stroke: '#10b981', label: 'Amenity' },
+  hostel: { fill: '#2d2a17', stroke: '#eab308', label: 'Hostel' },
+  utility: { fill: '#1e242e', stroke: '#64748b', label: 'Utility / parking' },
 }
 
 interface Projection {
   width: number
   height: number
   toXY(point: Point): { x: number; y: number }
+  /** Metres per SVG unit — lets the scale bar be honest. */
+  metresPerUnit: number
 }
 
 function project(points: readonly Point[], width = VIEW_WIDTH): Projection {
@@ -64,6 +67,7 @@ function project(points: readonly Point[], width = VIEW_WIDTH): Projection {
   return {
     width,
     height,
+    metresPerUnit: (lngSpan * 111_320) / width,
     toXY: (point) => ({
       x: ((point.lng - minLng) * cosLat * width) / lngSpan,
       y: ((maxLat - point.lat) * height) / latSpan,
@@ -71,7 +75,16 @@ function project(points: readonly Point[], width = VIEW_WIDTH): Projection {
   }
 }
 
-const path = (points: readonly Point[], plan: Projection) =>
+/** Where a name for an area belongs: the average of its corners. */
+function centroid(points: readonly Point[], plan: Projection) {
+  const projected = points.map((point) => plan.toXY(point))
+  return {
+    x: projected.reduce((sum, point) => sum + point.x, 0) / projected.length,
+    y: projected.reduce((sum, point) => sum + point.y, 0) / projected.length,
+  }
+}
+
+const line = (points: readonly Point[], plan: Projection) =>
   points
     .map((point) => {
       const { x, y } = plan.toXY(point)
@@ -79,22 +92,32 @@ const path = (points: readonly Point[], plan: Projection) =>
     })
     .join(' ')
 
-export function Campus25Map({ walks }: { walks: readonly SafeWalk[] }) {
+interface Campus25MapProps {
+  walks: readonly SafeWalk[]
+  /** SIGHTLINE patterns to shade. Empty until the risk snapshot loads. */
+  patterns?: readonly RiskPattern[]
+  /** Ranked routes; the safest is drawn emphasised. */
+  routes?: readonly RouteRisk[]
+}
+
+export function Campus25Map({ walks, patterns = [], routes = [] }: Campus25MapProps) {
   const plan = useMemo(() => {
     const framing = [
       ...CAMPUS25_BOUNDARY,
       ...CAMPUS25_BLOCKS.flatMap((item) => item.footprint),
       ...CAMPUS25_GATES.map((gate) => gate.position),
       ...CAMPUS25_RING_ROAD,
-      // The pond is the orientation cue people navigate by, so it stays in
-      // frame; the archery field and KP-25 are drawn but are not allowed to
-      // stretch the bounds and shrink the campus to a smudge.
-      ...(CAMPUS25_TERRAIN.find((item) => item.id === 'narendra-pond')?.outline ?? []),
+      ...CAMPUS25_TERRAIN.flatMap((item) => item.outline),
     ]
     return project(framing)
   }, [])
 
   const trails = walks.filter((walk) => walk.status === 'walking' || walk.status === 'escalated')
+  const safestId = routes[0]?.route.id ?? null
+  const riskById = new Map(routes.map((entry) => [entry.route.id, entry.risk]))
+
+  /** A 100m bar, rounded to the nearest sensible round number. */
+  const scaleUnits = 100 / plan.metresPerUnit
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -103,27 +126,56 @@ export function Campus25Map({ walks }: { walks: readonly SafeWalk[] }) {
           viewBox={`0 0 ${plan.width} ${plan.height}`}
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          aria-label="Campus 25 map: pond, ring road, blocks, gates, lit routes, muster points and live safe walks"
+          aria-label="Campus 25: pond, ring road, blocks, gates, walking routes with reported-risk shading, muster points and live safe walks"
           className="size-full"
         >
-          {/* Water and open ground first — everything else sits on top. */}
+          <defs>
+            {/* Ground wash — keeps the campus from reading as a flat cut-out. */}
+            <radialGradient id="campus-ground" cx="50%" cy="45%" r="70%">
+              <stop offset="0%" stopColor="#101a2c" />
+              <stop offset="100%" stopColor="#0a0e17" />
+            </radialGradient>
+            <linearGradient id="water" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#12345c" />
+              <stop offset="100%" stopColor="#0d243f" />
+            </linearGradient>
+            {/* Buildings get a soft drop so the cluster reads as raised. */}
+            <filter id="block-lift" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" floodColor="#05070d" floodOpacity="0.75" />
+            </filter>
+            <filter id="risk-blur" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="14" />
+            </filter>
+          </defs>
+
+          <rect width={plan.width} height={plan.height} fill="url(#campus-ground)" />
+
+          {/* ── Terrain ─────────────────────────────────────────────────── */}
           {CAMPUS25_TERRAIN.map((item) => {
-            const centre = plan.toXY(item.outline[0])
+            const centre = centroid(item.outline, plan)
+            const water = item.kind === 'water'
             return (
               <g key={item.id}>
                 <polygon
-                  points={path(item.outline, plan)}
-                  fill={item.kind === 'water' ? 'rgb(30 64 175 / 0.35)' : 'rgb(22 101 52 / 0.28)'}
-                  stroke={item.kind === 'water' ? 'rgb(59 130 246 / 0.5)' : 'rgb(34 197 94 / 0.4)'}
+                  points={line(item.outline, plan)}
+                  fill={water ? 'url(#water)' : '#14301f'}
+                  stroke={water ? '#3b82f6' : '#22c55e'}
+                  strokeOpacity={0.35}
                   strokeWidth={1.2}
                 />
                 <text
-                  x={centre.x + 30}
-                  y={centre.y + 26}
+                  x={centre.x}
+                  y={centre.y}
+                  textAnchor="middle"
                   style={{
                     fontSize: 11,
-                    fill: item.kind === 'water' ? 'rgb(147 197 253)' : 'rgb(134 239 172)',
+                    fill: water ? '#7dd3fc' : '#86efac',
                     fontFamily: 'var(--font-inter), sans-serif',
+                    letterSpacing: '0.02em',
+                    paintOrder: 'stroke',
+                    stroke: '#05070d',
+                    strokeWidth: 3,
+                    strokeLinejoin: 'round',
                   }}
                 >
                   {item.name}
@@ -132,35 +184,125 @@ export function Campus25Map({ walks }: { walks: readonly SafeWalk[] }) {
             )
           })}
 
-          {/* Ring road. */}
-          <polyline
-            points={path(CAMPUS25_RING_ROAD, plan)}
-            fill="none"
-            stroke="rgb(100 116 139 / 0.55)"
-            strokeWidth={7}
-            strokeLinejoin="round"
-          />
+          {/* ── Roads: casing then surface, the way a road reads ─────────── */}
+          <polyline points={line(CAMPUS25_RING_ROAD, plan)} fill="none" stroke="#0a0e17" strokeWidth={11} strokeLinejoin="round" strokeLinecap="round" />
+          <polyline points={line(CAMPUS25_RING_ROAD, plan)} fill="none" stroke="#2b3444" strokeWidth={7} strokeLinejoin="round" strokeLinecap="round" />
 
-          {/* Campus land. */}
+          {/* ── Campus boundary ─────────────────────────────────────────── */}
           <polygon
-            points={path(CAMPUS25_BOUNDARY, plan)}
-            fill="rgb(15 23 42 / 0.6)"
-            stroke="rgb(56 189 248 / 0.3)"
-            strokeWidth={1.5}
-            strokeDasharray="7 5"
+            points={line(CAMPUS25_BOUNDARY, plan)}
+            fill="#38bdf8"
+            fillOpacity={0.035}
+            stroke="#38bdf8"
+            strokeOpacity={0.3}
+            strokeWidth={1.4}
+            strokeDasharray="8 6"
           />
 
-          {/* Off-campus orientation marks. */}
+          {/* ── SIGHTLINE risk, under everything actionable ─────────────── */}
+          <g filter="url(#risk-blur)">
+            {patterns.map((pattern) => {
+              const { x, y } = plan.toXY(pattern.centre)
+              return (
+                <circle
+                  key={pattern.id}
+                  cx={x}
+                  cy={y}
+                  r={26 + pattern.weight * 26}
+                  fill="#ef4444"
+                  fillOpacity={0.1 + pattern.weight * 0.28}
+                />
+              )
+            })}
+          </g>
+
+          {/* ── Walking routes, weighted by how safe they scored ─────────── */}
+          {CAMPUS25_ROUTES.map((route) => {
+            const risk = riskById.get(route.id)
+            const safest = route.id === safestId
+            const stroke = risk === undefined
+              ? route.lit ? '#10b981' : '#f97316'
+              : risk < 0.2 ? '#10b981' : risk < 0.55 ? '#eab308' : '#ef4444'
+
+            return (
+              <g key={route.id}>
+                <polyline points={line(route.path, plan)} fill="none" stroke="#05070d" strokeWidth={safest ? 9 : 7} strokeLinecap="round" strokeLinejoin="round" />
+                <polyline
+                  points={line(route.path, plan)}
+                  fill="none"
+                  stroke={stroke}
+                  strokeOpacity={safest ? 0.95 : 0.6}
+                  strokeWidth={safest ? 5 : 3.2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={route.lit ? undefined : '9 6'}
+                />
+              </g>
+            )
+          })}
+
+          {/* ── Blocks ──────────────────────────────────────────────────── */}
+          <g filter="url(#block-lift)">
+            {CAMPUS25_BLOCKS.map((item) => {
+              const style = BLOCK_STYLE[item.kind]
+              return (
+                <polygon
+                  key={item.id}
+                  points={line(item.footprint, plan)}
+                  fill={style.fill}
+                  stroke={style.stroke}
+                  strokeOpacity={0.55}
+                  strokeWidth={1.2}
+                />
+              )
+            })}
+          </g>
+          {CAMPUS25_BLOCKS.map((item) => {
+            const centre = plan.toXY({
+              lat: (item.footprint[0].lat + item.footprint[2].lat) / 2,
+              lng: (item.footprint[0].lng + item.footprint[2].lng) / 2,
+            })
+            return (
+              <text
+                key={`${item.id}-label`}
+                x={centre.x}
+                y={centre.y + 3.5}
+                textAnchor="middle"
+                style={{
+                  fontSize: 10.5,
+                  fill: '#e2e8f0',
+                  fontFamily: 'var(--font-jetbrains), monospace',
+                  fontWeight: 700,
+                  paintOrder: 'stroke',
+                  stroke: '#05070d',
+                  strokeWidth: 3,
+                  strokeLinejoin: 'round',
+                }}
+              >
+                {item.name}
+              </text>
+            )
+          })}
+
+          {/* ── Off-campus orientation ──────────────────────────────────── */}
           {CAMPUS25_LANDMARKS.map((mark) => {
             const { x, y } = plan.toXY(mark.position)
             return (
-              <g key={mark.id}>
-                <circle cx={x} cy={y} r={3} fill="rgb(148 163 184)" />
+              <g key={mark.id} opacity={0.8}>
+                <circle cx={x} cy={y} r={2.5} fill="#64748b" />
                 <text
                   x={x}
                   y={y - 8}
                   textAnchor="middle"
-                  style={{ fontSize: 10.5, fill: 'rgb(148 163 184)', fontFamily: 'var(--font-inter), sans-serif' }}
+                  style={{
+                    fontSize: 10,
+                    fill: '#94a3b8',
+                    fontFamily: 'var(--font-inter), sans-serif',
+                    paintOrder: 'stroke',
+                    stroke: '#0a0e17',
+                    strokeWidth: 3,
+                    strokeLinejoin: 'round',
+                  }}
                 >
                   {mark.name}
                 </text>
@@ -168,90 +310,38 @@ export function Campus25Map({ walks }: { walks: readonly SafeWalk[] }) {
             )
           })}
 
-          {/* Walking routes. */}
-          {CAMPUS25_ROUTES.map((route) => (
-            <polyline
-              key={route.id}
-              points={path(route.path, plan)}
-              fill="none"
-              stroke={route.lit ? 'rgb(16 185 129 / 0.65)' : 'rgb(249 115 22 / 0.6)'}
-              strokeWidth={4}
-              strokeLinecap="round"
-              strokeDasharray={route.lit ? undefined : '8 6'}
-            />
-          ))}
-
-          {/* Blocks. */}
-          {CAMPUS25_BLOCKS.map((item) => {
-            const centre = plan.toXY({
-              lat: (item.footprint[0].lat + item.footprint[2].lat) / 2,
-              lng: (item.footprint[0].lng + item.footprint[2].lng) / 2,
-            })
-            const style = BLOCK_STYLE[item.kind]
-            return (
-              <g key={item.id}>
-                <polygon
-                  points={path(item.footprint, plan)}
-                  fill={style.fill}
-                  stroke={style.stroke}
-                  strokeWidth={1.3}
-                />
-                <text
-                  x={centre.x}
-                  y={centre.y + 3.5}
-                  textAnchor="middle"
-                  style={{
-                    fontSize: 11,
-                    fill: 'rgb(226 232 240)',
-                    fontFamily: 'var(--font-jetbrains), monospace',
-                    fontWeight: 700,
-                  }}
-                >
-                  {item.name}
-                </text>
-              </g>
-            )
-          })}
-
-          {/* Muster points. */}
+          {/* ── Muster points ───────────────────────────────────────────── */}
           {CAMPUS25_MUSTERS.map((muster) => {
             const { x, y } = plan.toXY(muster.position)
             return (
               <g key={muster.id}>
-                <circle cx={x} cy={y} r={15} fill="rgb(16 185 129 / 0.14)" stroke="rgb(16 185 129 / 0.55)" />
-                <circle cx={x} cy={y} r={4} fill="rgb(52 211 153)" />
-                <text
-                  x={x}
-                  y={y - 20}
-                  textAnchor="middle"
-                  style={{ fontSize: 10.5, fill: 'rgb(52 211 153)', fontFamily: 'var(--font-jetbrains), monospace' }}
-                >
-                  {muster.name}
-                </text>
+                <circle cx={x} cy={y} r={14} fill="#10b981" fillOpacity={0.12} stroke="#10b981" strokeOpacity={0.5} />
+                <path d={`M ${x - 4} ${y} l 3 3 l 5 -6`} fill="none" stroke="#34d399" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+                <title>{`Muster point — ${muster.name}`}</title>
               </g>
             )
           })}
 
-          {/* Gates. */}
+          {/* ── Gates ───────────────────────────────────────────────────── */}
           {CAMPUS25_GATES.map((gate) => {
             const { x, y } = plan.toXY(gate.position)
             return (
               <g key={gate.id}>
-                <rect
-                  x={x - 7}
-                  y={y - 7}
-                  width={14}
-                  height={14}
-                  rx={3}
-                  fill="rgb(56 189 248 / 0.25)"
-                  stroke="rgb(56 189 248 / 0.9)"
-                  strokeWidth={1.4}
-                />
+                <rect x={x - 7} y={y - 7} width={14} height={14} rx={3.5} fill="#0a1a28" stroke="#38bdf8" strokeWidth={1.6} />
+                <rect x={x - 2.5} y={y - 2.5} width={5} height={5} rx={1} fill="#38bdf8" />
                 <text
                   x={x}
-                  y={y + 22}
+                  y={y + 21}
                   textAnchor="middle"
-                  style={{ fontSize: 10.5, fill: 'rgb(56 189 248)', fontFamily: 'var(--font-jetbrains), monospace' }}
+                  style={{
+                    fontSize: 10,
+                    fill: '#7dd3fc',
+                    fontFamily: 'var(--font-jetbrains), monospace',
+                    paintOrder: 'stroke',
+                    stroke: '#05070d',
+                    strokeWidth: 3,
+                    strokeLinejoin: 'round',
+                  }}
                 >
                   {gate.name}
                 </text>
@@ -259,7 +349,7 @@ export function Campus25Map({ walks }: { walks: readonly SafeWalk[] }) {
             )
           })}
 
-          {/* Live walks. */}
+          {/* ── Live walks, always on top ───────────────────────────────── */}
           {trails.map((walk) => {
             const points = walk.path.map((point) => plan.toXY(point))
             if (points.length === 0) return null
@@ -272,36 +362,41 @@ export function Campus25Map({ walks }: { walks: readonly SafeWalk[] }) {
                   <polyline
                     points={points.map((point) => `${point.x},${point.y}`).join(' ')}
                     fill="none"
-                    stroke={danger ? 'rgb(239 68 68)' : 'rgb(56 189 248)'}
+                    stroke={danger ? '#ef4444' : '#38bdf8'}
                     strokeWidth={2.6}
                     strokeDasharray="6 4"
                   />
                 )}
-                <circle
-                  cx={last.x}
-                  cy={last.y}
-                  r={7}
-                  className={danger ? 'siren-pulse' : ''}
-                  fill={danger ? 'rgb(239 68 68)' : 'rgb(56 189 248)'}
-                />
+                <circle cx={last.x} cy={last.y} r={11} fill={danger ? '#ef4444' : '#38bdf8'} fillOpacity={0.18} />
+                <circle cx={last.x} cy={last.y} r={5} className={danger ? 'siren-pulse' : ''} fill={danger ? '#ef4444' : '#38bdf8'} />
               </g>
             )
           })}
+
+          {/* ── Scale bar ───────────────────────────────────────────────── */}
+          <g transform={`translate(16, ${plan.height - 18})`}>
+            <line x1={0} y1={0} x2={scaleUnits} y2={0} stroke="#64748b" strokeWidth={2} />
+            <line x1={0} y1={-4} x2={0} y2={4} stroke="#64748b" strokeWidth={2} />
+            <line x1={scaleUnits} y1={-4} x2={scaleUnits} y2={4} stroke="#64748b" strokeWidth={2} />
+            <text x={scaleUnits / 2} y={-7} textAnchor="middle" style={{ fontSize: 9.5, fill: '#94a3b8', fontFamily: 'var(--font-jetbrains), monospace' }}>
+              100 m
+            </text>
+          </g>
         </svg>
       </MapViewport>
 
-      <MapLegend />
+      <MapLegend showRisk={patterns.length > 0} />
     </div>
   )
 }
 
-/** Without this the coloured boxes are decoration, not information. */
-function MapLegend() {
-  const blockKinds: BlockKind[] = ['academic', 'admin', 'amenity', 'utility']
+/** Without this the coloured marks are decoration, not information. */
+function MapLegend({ showRisk }: { showRisk: boolean }) {
+  const kinds: BlockKind[] = ['academic', 'admin', 'amenity', 'utility']
 
   return (
     <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 rounded-lg border border-ops-border/60 bg-ops-bg/40 px-3 py-2">
-      {blockKinds.map((kind) => (
+      {kinds.map((kind) => (
         <LegendItem key={kind} label={BLOCK_STYLE[kind].label}>
           <span
             className="size-2.5 rounded-[2px] border"
@@ -309,21 +404,30 @@ function MapLegend() {
           />
         </LegendItem>
       ))}
-
       <LegendItem label="Gate">
-        <span className="size-2.5 rounded-[2px] border border-ops-accent bg-ops-accent/25" />
+        <span className="size-2.5 rounded-[2px] border border-ops-accent bg-[#0a1a28]" />
       </LegendItem>
       <LegendItem label="Muster point">
-        <span className="size-2.5 rounded-full bg-emerald-400" />
+        <span className="size-2.5 rounded-full border border-emerald-400/60 bg-emerald-400/20" />
       </LegendItem>
-      <LegendItem label="Lit route">
-        <span className="h-0.5 w-4 rounded-full bg-emerald-400/70" />
+      <LegendItem label="Quiet route">
+        <span className="h-[3px] w-5 rounded-full bg-emerald-400" />
       </LegendItem>
-      <LegendItem label="Unlit route">
-        <span className="h-0.5 w-4 rounded-full bg-sev-p1/70 [background-image:repeating-linear-gradient(90deg,currentColor_0_3px,transparent_3px_6px)]" />
-      </LegendItem>
-      <LegendItem label="Water">
-        <span className="size-2.5 rounded-[2px] border border-blue-400/50 bg-blue-700/40" />
+      {showRisk && (
+        <>
+          <LegendItem label="Some reports">
+            <span className="h-[3px] w-5 rounded-full bg-sev-p2" />
+          </LegendItem>
+          <LegendItem label="Avoid if you can">
+            <span className="h-[3px] w-5 rounded-full bg-sev-p0" />
+          </LegendItem>
+          <LegendItem label="Reported-risk area">
+            <span className="size-2.5 rounded-full bg-sev-p0/40" />
+          </LegendItem>
+        </>
+      )}
+      <LegendItem label="Unlit (dashed)">
+        <span className="h-[3px] w-5 rounded-full bg-sev-p1/70" />
       </LegendItem>
       <LegendItem label="Live walk">
         <span className="size-2.5 rounded-full bg-ops-accent" />

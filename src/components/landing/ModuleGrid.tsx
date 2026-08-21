@@ -38,9 +38,9 @@ const MODULES = [
     forSale: false,
   },
   {
-    name: 'BEACON',
-    role: 'Room-level indoor location',
-    detail: 'Printed QR anchors resolve building, floor, and room at 99% confidence — where GPS gives a ±30m blur.',
+    name: 'SIGHTLINE',
+    role: 'Risk-aware routing & pattern detection',
+    detail: 'Ranks tonight’s routes by what has been reported near them at this hour. A pattern needs different reporters, so one account cannot reroute a campus.',
     forSale: false,
   },
   {

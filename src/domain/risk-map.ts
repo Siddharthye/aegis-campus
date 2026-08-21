@@ -208,7 +208,10 @@ export function scoreRoute(
     )
     .sort((a, b) => b.weight - a.weight)
 
-  const patternRisk = Math.min(1, passes.reduce((sum, pattern) => sum + pattern.weight, 0))
+  const patternRisk = Math.min(
+    1,
+    passes.reduce((sum, pattern) => sum + pattern.weight, 0),
+  )
   const darknessPenalty = route.lit ? 0 : 0.25
   const risk = Math.min(1, patternRisk + darknessPenalty)
 
@@ -257,4 +260,18 @@ export function describeRisk(risk: number): 'Quiet' | 'Some reports' | 'Avoid if
   if (risk < 0.2) return 'Quiet'
   if (risk < 0.55) return 'Some reports'
   return 'Avoid if you can'
+}
+
+/**
+ * The band to show a walker for one scored route.
+ *
+ * A route whose only mark against it is the standing unlit penalty has had
+ * nothing reported on it, so calling it 'Some reports' would be a lie the
+ * walker could check against the reason text printed beside it.
+ */
+export function describeRoute(
+  entry: RouteRisk,
+): 'Quiet' | 'Unlit' | 'Some reports' | 'Avoid if you can' {
+  if (entry.passes.length === 0 && entry.risk > 0) return 'Unlit'
+  return describeRisk(entry.risk)
 }

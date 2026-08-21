@@ -8,7 +8,7 @@ const COLUMNS = [
       { href: '/control', label: 'Control room' },
       { href: '/respond', label: 'Responder view' },
       { href: '/analytics', label: 'PULSE analytics' },
-      { href: '/beacon', label: 'BEACON anchor sheets' },
+      { href: '/safe-walk', label: 'SIGHTLINE risk routing' },
       { href: '/case', label: 'Check a case' },
       { href: '/safe-walk', label: 'Safe Walk' },
     ],

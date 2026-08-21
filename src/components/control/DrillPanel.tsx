@@ -158,7 +158,7 @@ export function DrillPanel({ onPipelineChange }: { onPipelineChange: () => void 
                 className="w-full rounded-md border border-ops-border bg-ops-bg p-2.5 text-left transition-colors hover:border-ops-accent/40 hover:bg-ops-lift"
               >
                 <p className="text-[12px] font-medium text-ops-text">{scenario.name}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-ops-muted">
+                <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-ops-muted">
                   {scenario.description}
                 </p>
               </button>

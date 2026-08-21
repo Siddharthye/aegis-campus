@@ -123,8 +123,9 @@ export function Hero() {
               className="mt-5 max-w-xl text-[15px] leading-relaxed text-ops-muted sm:text-base"
             >
               Report in three taps. Locate to the room, not the block. Fuse fifty duplicate
-              reports into one incident. Dispatch the nearest responder — with an SLA clock
-              running on every second.
+              reports into one incident. Dispatch the nearest responder with an SLA clock on
+              every second — and tell the next person which way to walk tonight, using what
+              everyone before them reported.
             </motion.p>
 
             <motion.div
@@ -164,8 +165,9 @@ export function Hero() {
             </div>
 
             <p className="mt-6 max-w-xs text-[12px] leading-relaxed text-ops-faint">
-              Live from the incident store over SSE. Six subsystems — SENTINEL, BEACON, FUSION,
-              SIREN, PULSE, DRILL — behind four seats, all of it running with the wifi off.
+              Live from the incident store over SSE. Six subsystems — SENTINEL, SIGHTLINE,
+              FUSION, SIREN, PULSE, DRILL — behind four seats, all of it running with the wifi
+              off.
             </p>
 
             <div className="mt-5 flex gap-2.5">

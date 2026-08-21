@@ -114,7 +114,6 @@ export interface Landmark {
 
 /** What a student uses to orient themselves, on and off campus. */
 export const CAMPUS25_LANDMARKS: readonly Landmark[] = [
-  { id: 'archery', name: 'KIIT-KISS Archery Field', position: { lat: 20.3596, lng: 85.8158 }, offCampus: true },
   { id: 'kp25', name: 'KP-25 (ABCD)', position: { lat: 20.3529, lng: 85.8158 }, offCampus: true },
   { id: 'idz', name: 'iON Digital Zone', position: { lat: 20.3512, lng: 85.8172 }, offCampus: true },
   { id: 'otv-rd', name: 'Odisha Television Rd', position: { lat: 20.3512, lng: 85.8226 }, offCampus: true },
@@ -150,7 +149,7 @@ export const CAMPUS25_TERRAIN: readonly Terrain[] = [
   },
   {
     id: 'archery-field',
-    name: 'Archery Field',
+    name: 'KIIT-KISS Archery Field',
     kind: 'field',
     outline: [
       { lat: 20.3600, lng: 85.8150 },

@@ -121,7 +121,7 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
         </div>
       </Panel>
 
-      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(250px,0.8fr)_minmax(0,1.7fr)_minmax(270px,0.85fr)] xl:gap-4">
+      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(240px,0.75fr)_minmax(0,1.7fr)_minmax(260px,0.8fr)] xl:gap-4">
       <Panel
         label="Queue"
         aside={
@@ -131,13 +131,13 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
         }
         className="min-w-0"
       >
-        <div className="p-2.5">
+        <div className="max-h-[560px] overflow-y-auto p-2.5">
           <p className="ops-label mb-2 px-1 text-ops-faint">Ranked by SLA pressure</p>
           <IncidentQueue entries={queue} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
       </Panel>
 
-      <div className="min-w-0">
+      <div className="min-w-0 space-y-3">
         {selected ? (
           <IncidentDetail
             incident={selected}
