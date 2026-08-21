@@ -17,7 +17,7 @@ reviewers: [`CODEMAP.md`](CODEMAP.md)
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # 154 domain tests, no mocks, under a second
+npm test           # 164 domain tests, no mocks, under a second
 ./smoke.sh         # exercises the whole pipeline over HTTP, in another terminal
 ```
 
@@ -59,8 +59,16 @@ we made the drill a product feature.
 | `/analytics` | Admin | PULSE analytics + patrol plan |
 | `/beacon` | Admin | Printable QR anchor sheets |
 | `/case` | Anyone | **VEIL** — check a case with the one-way token from your report. No account, no name |
+| `/wanted` | — | The six integrations we will buy, each mapped to a slot already in the product |
 
-**NEXBOT**, the ops copilot (floating bot button, every screen), answers
+Broadcasts ship as authored templates in **English, Hindi and Odia** — an
+English-only alert excludes the support staff and visitors often closest to the
+hazard, and a mistranslated evacuation instruction is worse than none. Every
+drill ends in a printable after-action report, produced by the browser's own
+print-to-PDF so there is no PDF library to install.
+
+**NEXBOT**, the ops copilot (the robot in the corner watches your cursor on
+every screen), answers
 questions from the live incident store — "what needs attention", "any SLA
 breaches", "who is free" — with zero external dependencies.
 

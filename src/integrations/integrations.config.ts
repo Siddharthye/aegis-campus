@@ -44,14 +44,34 @@ export const INTEGRATIONS: readonly Integration[] = [
   },
 
   // ── Acquired modules go below this line ────────────────────────────────
-  // Set `enabled: true` once the seller has run it in front of us. Keeping
-  // the disabled example here means the sprint is a one-line edit under
-  // time pressure, not a blank-page problem.
+  // Set `enabled: true` once the seller has run it in front of us, and add a
+  // non-localhost origin to AEGIS_EXT_ALLOWLIST. Each stub below matches a gap
+  // published on /wanted, so the sprint is a one-line edit under time
+  // pressure rather than a blank-page problem.
   //
   // {
   //   id: 'sms-intake',
-  //   name: 'SMS / WhatsApp emergency intake',
+  //   name: 'SMS / WhatsApp / IVR emergency intake',
   //   kind: 'intake-channel',
+  //   mount: 'iframe',
+  //   src: 'https://their-module.example',
+  //   widgetPath: '/widget',
+  //   vendor: 'Team HA-0XX-XXXX',
+  //   enabled: false,
+  // },
+  // {
+  //   id: 'loudspeaker',
+  //   name: 'Campus loudspeaker / PA broadcast',
+  //   kind: 'alert-channel',
+  //   mount: 'rest',
+  //   src: 'https://their-module.example',
+  //   vendor: 'Team HA-0XX-XXXX',
+  //   enabled: false,
+  // },
+  // {
+  //   id: 'cctv-hazard',
+  //   name: 'CCTV hazard / crowd-density detection',
+  //   kind: 'sensor-feed',
   //   mount: 'iframe',
   //   src: 'https://their-module.example',
   //   widgetPath: '/widget',

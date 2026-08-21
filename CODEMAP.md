@@ -58,6 +58,8 @@ Then the two that turn history into action:
 | [`src/domain/case-token.ts`](src/domain/case-token.ts) | VEIL: anonymous follow-up. Only `sha256(token)` is stored, and `toCaseStatus` is a deliberately narrow projection. |
 | [`src/components/report/prepare-evidence.ts`](src/components/report/prepare-evidence.ts) | Re-encoding a photo through a canvas strips EXIF as a side effect — a privacy guarantee produced by the mechanism, not by a library. |
 | [`src/domain/offline-queue.ts`](src/domain/offline-queue.ts) | Campus dead zones are where emergencies happen. Reports are held on the device and flushed on reconnect. |
+| [`src/domain/broadcast-templates.ts`](src/domain/broadcast-templates.ts) | Authored EN/HI/OR broadcasts. Translations are written, not generated — a mistranslated evacuation instruction is worse than none. |
+| [`src/components/nexbot/NexbotAvatar.tsx`](src/components/nexbot/NexbotAvatar.tsx) | The 3D robot that tracks your cursor. Layered `translateZ` planes, not a hosted scene, so it survives the wifi-off gate. |
 
 ---
 

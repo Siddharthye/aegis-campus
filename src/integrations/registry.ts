@@ -14,10 +14,14 @@
  * card-sized region and nothing else.
  */
 export type IntegrationKind =
+  /** Delivers a broadcast: push, SMS, campus loudspeaker, digital signage. */
   | 'alert-channel'
   | 'map-layer'
   | 'analytics-panel'
+  /** Brings reports *in* from outside the app: SMS, WhatsApp, IVR, a phone line. */
   | 'intake-channel'
+  /** Raises incidents from hardware: CCTV analytics, smoke sensors, BLE buttons. */
+  | 'sensor-feed'
   | 'media-pipeline'
   | 'custom'
 

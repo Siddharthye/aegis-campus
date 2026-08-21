@@ -130,7 +130,9 @@ export function ControlRoom() {
       <div className="flex flex-col gap-3">
         <SentinelLane />
         <DrillPanel onPipelineChange={() => void refreshIncidents()} />
-        <IntegrationSlot kind="analytics-panel" label="Acquired module" showWhenEmpty />
+        <IntegrationSlot kind="sensor-feed" label="Sensor feed" showWhenEmpty />
+        <IntegrationSlot kind="alert-channel" label="Broadcast channel" />
+        <IntegrationSlot kind="analytics-panel" label="Acquired module" />
       </div>
     </div>
   )

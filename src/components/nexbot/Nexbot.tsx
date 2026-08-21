@@ -1,9 +1,10 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bot, Send, Sparkles, X } from 'lucide-react'
+import { Send, Sparkles, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { NexbotAvatar } from './NexbotAvatar'
 
 /**
  * NEXBOT — the AEGIS ops copilot. Floating FAB opens a chat sheet; answers are
@@ -89,10 +90,14 @@ export function Nexbot() {
         onClick={() => setOpen((current) => !current)}
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
-        className="fixed right-5 bottom-5 z-50 grid size-13 place-items-center rounded-full border border-ops-accent/40 bg-ops-panel text-ops-accent shadow-[0_0_24px_rgba(56,189,248,0.25)]"
+        className="fixed right-5 bottom-5 z-50 grid size-15 place-items-center rounded-full border border-ops-accent/40 bg-ops-panel/80 backdrop-blur-sm shadow-[0_0_28px_rgba(56,189,248,0.28)]"
         aria-label={open ? 'Close NEXBOT' : 'Ask NEXBOT'}
       >
-        {open ? <X size={20} /> : <Bot size={20} />}
+        {open ? (
+          <X size={20} className="text-ops-accent" />
+        ) : (
+          <NexbotAvatar size={38} />
+        )}
       </motion.button>
 
       {/* Sheet */}
@@ -106,8 +111,8 @@ export function Nexbot() {
             className="card-sheen fixed right-5 bottom-21 z-50 flex max-h-[min(60vh,480px)] w-[min(92vw,360px)] flex-col overflow-hidden rounded-2xl bg-ops-panel/95 backdrop-blur-md"
           >
             <header className="flex items-center gap-2.5 border-b border-ops-border px-4 py-3">
-              <span className="grid size-7 place-items-center rounded-full bg-ops-accent/15 text-ops-accent">
-                <Bot size={14} />
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ops-accent/10">
+                <NexbotAvatar size={24} />
               </span>
               <div>
                 <p className="ops-label text-ops-accent">Ask NEXBOT</p>

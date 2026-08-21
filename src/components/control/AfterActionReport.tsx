@@ -35,6 +35,15 @@ export function AfterActionReport({ report }: { report: DrillReport }) {
         <Metric label="Duration" value={clockOrDash(report.durationMs)} />
       </dl>
 
+      <a
+        href={`/drill/${report.drillId}/brief`}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2.5 inline-block rounded-md border border-ops-accent/40 bg-ops-accent/10 px-2.5 py-1 text-[11px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20"
+      >
+        Open printable report →
+      </a>
+
       <ul className="mt-2.5 flex flex-col gap-2">
         {report.incidents.map((review) => (
           <li key={review.incidentId}>

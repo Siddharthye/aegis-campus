@@ -6,6 +6,7 @@ import { LandingNav } from '@/components/landing/LandingNav'
 import { LiveTour } from '@/components/landing/LiveTour'
 import { Manifesto } from '@/components/landing/Manifesto'
 import { ModuleGrid } from '@/components/landing/ModuleGrid'
+import { NexbotShowcase } from '@/components/landing/NexbotShowcase'
 import { SmoothScroll } from '@/components/landing/SmoothScroll'
 import { Nexbot } from '@/components/nexbot/Nexbot'
 
@@ -24,6 +25,7 @@ export default function LandingPage() {
         <FailurePoints />
         <LiveTour />
         <ModuleGrid />
+        <NexbotShowcase />
         <Manifesto />
       </main>
       <Footer />

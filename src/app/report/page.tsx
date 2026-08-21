@@ -1,5 +1,6 @@
 import { OpsShell } from '@/components/ops/OpsShell'
 import { ReportWizard } from '@/components/report/ReportWizard'
+import { IntegrationSlot } from '@/integrations/slots'
 import { SafeWalkPanel } from '@/components/sentinel/SafeWalkPanel'
 import { SentinelTrigger } from '@/components/sentinel/SentinelTrigger'
 
@@ -21,6 +22,7 @@ export default function ReportPage() {
         <div className="mx-auto flex max-w-lg flex-col gap-5">
           <ReportWizard />
           <SafeWalkPanel />
+          <IntegrationSlot kind="intake-channel" label="Other ways to report" showWhenEmpty />
         </div>
       </SentinelTrigger>
     </OpsShell>

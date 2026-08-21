@@ -6,6 +6,7 @@ import type { Incident, IncidentStatus } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
 import { StatusBadge } from '@/components/ops/StatusBadge'
 import { AssignedUnits } from './AssignedUnits'
+import { BroadcastComposer } from './BroadcastComposer'
 import { EvacuationPanel } from './EvacuationPanel'
 import { EvidenceStrip } from './EvidenceStrip'
 import { IncidentTimeline } from './IncidentTimeline'
@@ -130,6 +131,8 @@ export function IncidentDetail({
       <AssignedUnits incident={incident} />
 
       <EvacuationPanel incident={incident} onUseInstruction={setBroadcastMessage} />
+
+      <BroadcastComposer incident={incident} onUseTemplate={setBroadcastMessage} />
 
       <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
         <p className="ops-label text-ops-muted">Geofenced broadcast</p>
