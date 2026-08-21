@@ -7,6 +7,7 @@ import { Manifesto } from '@/components/landing/Manifesto'
 import { ModuleGrid } from '@/components/landing/ModuleGrid'
 import { NexbotShowcase } from '@/components/landing/NexbotShowcase'
 import { SmoothScroll } from '@/components/landing/SmoothScroll'
+import { LiquidGradient } from '@/components/ui/LiquidGradient'
 
 /**
  * The AEGIS landing page: a cinematic scroll story built from the same design
@@ -16,7 +17,13 @@ import { SmoothScroll } from '@/components/landing/SmoothScroll'
 export default function LandingPage() {
   return (
     <SmoothScroll>
-      <main>
+      {/* One WebGL instance for the whole page, fixed behind everything.
+          z-0 rather than negative: the body's opaque background paints over
+          negative-z children, which would bury the canvas entirely. */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 opacity-60">
+        <LiquidGradient className="h-full w-full" />
+      </div>
+      <main className="relative z-10">
         <Hero />
         <CapabilityStrip />
         <FailurePoints />

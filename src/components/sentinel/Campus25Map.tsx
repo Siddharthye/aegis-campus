@@ -33,7 +33,7 @@ const VIEW_WIDTH = 900
 const PADDING = 0.04
 
 const BLOCK_STYLE: Record<BlockKind, { fill: string; stroke: string; label: string }> = {
-  academic: { fill: '#1b2b45', stroke: '#38bdf8', label: 'Academic block' },
+  academic: { fill: '#1b2b45', stroke: '#a78bfa', label: 'Academic block' },
   admin: { fill: '#232a38', stroke: '#94a3b8', label: 'Administration' },
   amenity: { fill: '#16302a', stroke: '#10b981', label: 'Amenity' },
   hostel: { fill: '#2d2a17', stroke: '#eab308', label: 'Hostel' },
@@ -290,9 +290,9 @@ export function Campus25Map({
           {/* ── Campus boundary ─────────────────────────────────────────── */}
           <polygon
             points={line(CAMPUS25_BOUNDARY, plan)}
-            fill="#38bdf8"
+            fill="#a78bfa"
             fillOpacity={0.035}
-            stroke="#38bdf8"
+            stroke="#a78bfa"
             strokeOpacity={0.3}
             strokeWidth={1.4}
             strokeDasharray="8 6"
@@ -543,10 +543,10 @@ export function Campus25Map({
                   height={14}
                   rx={3.5}
                   fill="#0a1a28"
-                  stroke="#38bdf8"
+                  stroke="#a78bfa"
                   strokeWidth={focus?.title === gate.name ? 2.6 : 1.6}
                 />
-                <rect x={x - 2.5} y={y - 2.5} width={5} height={5} rx={1} fill="#38bdf8" />
+                <rect x={x - 2.5} y={y - 2.5} width={5} height={5} rx={1} fill="#a78bfa" />
                 <text
                   x={x}
                   y={y + 21}
@@ -581,7 +581,7 @@ export function Campus25Map({
                   <polyline
                     points={points.map((point) => `${point.x},${point.y}`).join(' ')}
                     fill="none"
-                    stroke={danger ? '#ef4444' : '#38bdf8'}
+                    stroke={danger ? '#ef4444' : '#a78bfa'}
                     strokeWidth={2.6}
                     strokeDasharray="6 4"
                   />
@@ -590,7 +590,7 @@ export function Campus25Map({
                   cx={last.x}
                   cy={last.y}
                   r={11}
-                  fill={danger ? '#ef4444' : '#38bdf8'}
+                  fill={danger ? '#ef4444' : '#a78bfa'}
                   fillOpacity={0.18}
                 />
                 <circle
@@ -598,7 +598,7 @@ export function Campus25Map({
                   cy={last.y}
                   r={5}
                   className={danger ? 'siren-pulse' : ''}
-                  fill={danger ? '#ef4444' : '#38bdf8'}
+                  fill={danger ? '#ef4444' : '#a78bfa'}
                 />
               </g>
             )

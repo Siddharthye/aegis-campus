@@ -1,22 +1,29 @@
 @import 'tailwindcss';
 
+/* ── Palette: VIOLET AURORA ON GRAPHITE ─────────────────────────────────────
+   A near-black graphite base with a faint violet undertone, warm-neutral text,
+   and one luminous violet accent. The warm hues are deliberately reserved for
+   severity — P0 red, P1 orange, P2 amber stay unmistakable against the cool
+   base, and P3 (informational) rides the accent. Marketing and ops share
+   these tokens; the LiquidGradient shader mirrors them. */
 @theme {
-  --color-ops-bg: #0a0e17;
-  --color-ops-deep: #05070d;
-  --color-ops-panel: #121826;
-  --color-ops-lift: #182034;
-  --color-ops-border: #1f2937;
-  --color-ops-text: #e5e7eb;
-  --color-ops-muted: #8b95a7;
-  --color-ops-faint: #5b647a;
-  --color-ops-accent: #38bdf8;
+  --color-ops-bg: #0d0c13;
+  --color-ops-deep: #08070c;
+  --color-ops-panel: #14131d;
+  --color-ops-lift: #1c1a29;
+  --color-ops-border: #272437;
+  --color-ops-text: #ededf4;
+  --color-ops-muted: #9b98ad;
+  --color-ops-faint: #6a677e;
+  --color-ops-accent: #a78bfa;
 
-  --color-sev-p0: #ef4444;
-  --color-sev-p1: #f97316;
-  --color-sev-p2: #eab308;
-  --color-sev-p3: #38bdf8;
+  --color-sev-p0: #ff453a;
+  --color-sev-p1: #ff9f0a;
+  --color-sev-p2: #ffd60a;
+  --color-sev-p3: #a78bfa;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, 'Cascadia Code', monospace;
 }
 
@@ -33,7 +40,7 @@ body {
 }
 
 ::selection {
-  background: rgb(56 189 248 / 0.25);
+  background: rgb(167 139 250 / 0.3);
 }
 
 /* ── Ops idioms ─────────────────────────────────────────────────────────── */
@@ -66,13 +73,13 @@ body {
 
 /* Fine dot grid that gives the deep background texture without weight. */
 .landing-grid {
-  background-image: radial-gradient(rgb(56 189 248 / 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(rgb(167 139 250 / 0.07) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
 /* Soft radial glow used behind hero content and section headings. */
 .glow-accent {
-  background: radial-gradient(ellipse 55% 45% at 50% 40%, rgb(56 189 248 / 0.14), transparent 70%);
+  background: radial-gradient(ellipse 55% 45% at 50% 40%, rgb(167 139 250 / 0.15), transparent 70%);
 }
 
 .glow-danger {
@@ -90,7 +97,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(160deg, rgb(56 189 248 / 0.35), rgb(31 41 55 / 0.6) 35%, rgb(31 41 55 / 0.3));
+  background: linear-gradient(160deg, rgb(167 139 250 / 0.35), rgb(39 36 55 / 0.6) 35%, rgb(39 36 55 / 0.3));
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -115,6 +122,15 @@ body {
 .marquee-track {
   animation: marquee-x 36s linear infinite;
   will-change: transform;
+}
+
+/* Carousel track: the scrollbar would break the floating illusion. */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Print ──────────────────────────────────────────────────────────────── */
@@ -182,10 +198,10 @@ body {
 .glass-slab {
   position: relative;
   border-radius: 28px;
-  border: 1px solid rgb(148 163 184 / 0.14);
+  border: 1px solid rgb(196 181 253 / 0.12);
   background:
-    linear-gradient(180deg, rgb(148 163 184 / 0.06), rgb(148 163 184 / 0) 120px),
-    rgb(13 18 30 / 0.72);
+    linear-gradient(180deg, rgb(196 181 253 / 0.05), rgb(196 181 253 / 0) 120px),
+    rgb(18 16 27 / 0.72);
   box-shadow:
     0 -1px 0 rgb(226 232 240 / 0.06) inset,
     0 24px 80px -24px rgb(2 6 16 / 0.9);
@@ -194,8 +210,8 @@ body {
 /* Small floating glass elements: dock, palette, island nav, chips. Blur is
    allowed here — these are the small surfaces the motion contract permits. */
 .glass-chrome {
-  border: 1px solid rgb(148 163 184 / 0.16);
-  background: rgb(13 18 30 / 0.66);
+  border: 1px solid rgb(196 181 253 / 0.14);
+  background: rgb(18 16 27 / 0.66);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   box-shadow:
@@ -237,12 +253,12 @@ body {
 
 .aurora-a {
   animation: aurora-drift-a 26s ease-in-out infinite;
-  background: radial-gradient(circle, rgb(56 189 248 / 0.16), transparent 65%);
+  background: radial-gradient(circle, rgb(167 139 250 / 0.16), transparent 65%);
 }
 
 .aurora-b {
   animation: aurora-drift-b 32s ease-in-out infinite;
-  background: radial-gradient(circle, rgb(56 120 248 / 0.1), transparent 65%);
+  background: radial-gradient(circle, rgb(139 92 246 / 0.1), transparent 65%);
 }
 
 /* Keyboard focus — visible, on-brand, and only for keyboard users. */
