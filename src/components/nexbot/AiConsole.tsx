@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Bot, Radio, Send } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { SplineRobot } from './SplineRobot'
+import { NexbotAvatar } from './NexbotAvatar'
 import { useNexbotChat, type AssistSources } from './use-nexbot-chat'
 
 const SUGGESTIONS = [
@@ -80,7 +80,7 @@ export function AiConsole({ initialQuestion }: { initialQuestion?: string }) {
     <div className="relative h-[calc(100dvh-3.25rem)] min-h-[560px] overflow-hidden pb-24">
       {/* Full-bleed Spline stage */}
       <div ref={stageRef} className="absolute inset-0 bg-ops-deep">
-        <SplineRobot className="absolute inset-0 size-full" fallbackSize={200} />
+        <NexbotAvatar size={200} alert={stats !== null && stats.openIncidents > 3} />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_65%_40%,transparent_18%,rgba(5,7,13,0.55)_78%)]" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-[min(48%,520px)] bg-gradient-to-l from-ops-bg/90 via-ops-bg/35 to-transparent" />
       </div>

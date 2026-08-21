@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { SplineRobot } from '@/components/nexbot/SplineRobot'
+import { NexbotAvatar } from '@/components/nexbot/NexbotAvatar'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -32,7 +32,7 @@ export function NexbotShowcase() {
           className="relative mx-auto w-full"
         >
           <div className="relative aspect-square w-full max-w-[420px] overflow-hidden rounded-2xl border border-ops-border bg-ops-deep mx-auto shadow-[0_0_60px_rgba(56,189,248,0.12)]">
-            <SplineRobot className="absolute inset-0 size-full" fallbackSize={160} />
+            <NexbotAvatar size={190} />
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,transparent_35%,rgba(5,7,13,0.55)_100%)]" />
           </div>
         </motion.div>
