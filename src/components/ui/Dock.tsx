@@ -19,7 +19,6 @@ import {
   Radar,
   Shield,
   Siren,
-  Store,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -61,7 +60,6 @@ const ENTRIES: DockEntry[] = [
   { kind: 'gap' },
   { kind: 'link', href: '/beacon', label: 'Beacon', icon: <QrCode className={ICON} />, desktopOnly: true },
   { kind: 'link', href: '/case', label: 'Case', icon: <FileSearch className={ICON} />, desktopOnly: true },
-  { kind: 'link', href: '/wanted', label: 'Wanted', icon: <Store className={ICON} />, desktopOnly: true },
   { kind: 'gap' },
   { kind: 'nexbot', href: '/ai', label: 'NEXBOT' },
   { kind: 'palette', label: 'Search · ⌘K' },

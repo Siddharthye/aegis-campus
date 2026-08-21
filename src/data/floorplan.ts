@@ -34,6 +34,11 @@ export interface FloorSpace {
   wing: 'A' | 'B' | 'C'
   /** Extra line shown on hover, where the plan names one. */
   note?: string
+  /**
+   * Floors this space exists on. Omitted means every floor — used for the
+   * library approach, which only opens off the upper corridor.
+   */
+  onlyFloors?: readonly number[]
 }
 
 /** Corridors are drawn beneath everything as the circulation spine. */
@@ -118,7 +123,7 @@ export const FLOOR_SPACES: readonly FloorSpace[] = [
   room('C 213', 63, 62, 11, 6, 'C', 'lecture', 'Lecture Theatre 6'),
   room('C 212 W', 63, 74, 11, 7, 'C', 'lecture', 'Lecture Theatre 5'),
   room('C 212 E', 78, 74, 11, 7, 'C', 'lecture', 'Lecture Theatre 5'),
-  room('Library', 84, 38, 12, 6, 'C', 'amenity', 'Towards the Library'),
+  { ...room('Library', 84, 38, 12, 6, 'C', 'amenity', 'Towards the Library'), onlyFloors: [3] },
   room('Lift 15', 76, 32, 4, 4, 'C', 'lift'),
   room('Lift 16', 76, 37, 4, 4, 'C', 'lift'),
   room('Lift 18', 66, 46, 4, 4, 'C', 'lift'),
@@ -206,9 +211,12 @@ function renumber(id: string, floor: FloorId): string {
  * spacesForFloor(1).find((space) => space.id === 'B 101') // => the room below B 201
  */
 export function spacesForFloor(floor: FloorId): FloorSpace[] {
-  if (floor === 2) return [...FLOOR_SPACES]
+  const present = FLOOR_SPACES.filter(
+    (space) => space.onlyFloors === undefined || space.onlyFloors.includes(floor),
+  )
+  if (floor === 2) return present
 
-  return FLOOR_SPACES.map((space) => {
+  return present.map((space) => {
     const id = renumber(space.id, floor)
     return { ...space, id, label: id }
   })

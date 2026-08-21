@@ -63,7 +63,7 @@ export function Nexbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="card-sheen fixed right-4 bottom-42 z-50 flex max-h-[min(58vh,460px)] w-[min(92vw,360px)] flex-col overflow-hidden rounded-2xl bg-ops-panel/95 backdrop-blur-md sm:right-5 sm:bottom-22"
+            className="card-sheen fixed inset-x-4 bottom-24 z-50 flex max-h-[min(70vh,520px)] flex-col overflow-hidden rounded-2xl bg-ops-panel/95 backdrop-blur-md sm:inset-x-auto sm:right-5 sm:bottom-24 sm:w-[380px]"
           >
             <header className="flex items-center gap-2.5 border-b border-ops-border px-4 py-3">
               <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ops-accent/10">

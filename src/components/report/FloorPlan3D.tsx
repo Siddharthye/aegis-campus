@@ -11,6 +11,7 @@ import {
   type FloorSpace,
   type SpaceKind,
 } from '@/data/floorplan'
+import { MapViewport } from '@/components/ui/MapViewport'
 
 /**
  * The Campus 25 second floor, as an interactive isometric model.
@@ -94,6 +95,7 @@ export function FloorPlan3D({
 
   return (
     <div className={`relative ${className}`}>
+      <MapViewport label={`Floor ${floor}`} className="h-full w-full">
       <div
         ref={frameRef}
         onPointerMove={onPointerMove}
@@ -102,7 +104,7 @@ export function FloorPlan3D({
           py.set(0.5)
           setHovered(null)
         }}
-        className="relative h-full w-full overflow-hidden rounded-2xl"
+        className="relative h-full w-full"
         style={{ perspective: 1400 }}
       >
         <div aria-hidden className="aurora-blob aurora-a left-[15%] top-[10%] size-[55%] opacity-60" />
@@ -174,6 +176,7 @@ export function FloorPlan3D({
           </motion.div>
         </div>
       </div>
+      </MapViewport>
 
       <Legend wing={wing} />
     </div>

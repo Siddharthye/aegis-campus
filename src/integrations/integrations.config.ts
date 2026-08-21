@@ -45,8 +45,8 @@ export const INTEGRATIONS: readonly Integration[] = [
 
   // ── Acquired modules go below this line ────────────────────────────────
   // Set `enabled: true` once the seller has run it in front of us, and add a
-  // non-localhost origin to AEGIS_EXT_ALLOWLIST. Each stub below matches a gap
-  // published on /wanted, so the sprint is a one-line edit under time
+  // non-localhost origin to AEGIS_EXT_ALLOWLIST. Each stub below is a gap we
+  // deliberately did not build, so the sprint is a one-line edit under time
   // pressure rather than a blank-page problem.
   //
   // {

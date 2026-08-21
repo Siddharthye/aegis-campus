@@ -10,6 +10,7 @@ const COLUMNS = [
       { href: '/analytics', label: 'PULSE analytics' },
       { href: '/beacon', label: 'BEACON anchor sheets' },
       { href: '/case', label: 'Check a case' },
+      { href: '/safe-walk', label: 'Safe Walk' },
     ],
   },
   {
@@ -20,7 +21,6 @@ const COLUMNS = [
       { href: 'https://github.com/Siddharthye/siren-alerts', label: 'SIREN — alerts' },
       { href: 'https://github.com/Siddharthye/atlas-incident-map', label: 'ATLAS — map + triage' },
       { href: 'https://github.com/Siddharthye/fusion-reports', label: 'FUSION — report fusion' },
-      { href: '/wanted', label: 'What we will buy' },
     ],
   },
 ]

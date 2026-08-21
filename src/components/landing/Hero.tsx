@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: '/control', label: 'Control Room' },
   { href: '/analytics', label: 'Analytics' },
   { href: '/ai', label: 'NEXBOT' },
-  { href: '/wanted', label: 'Wanted' },
+  { href: '/safe-walk', label: 'Safe Walk' },
 ]
 
 interface LiveStats {
@@ -189,10 +189,10 @@ export function Hero() {
 
             <div className="mt-5 flex gap-2.5">
               <Link
-                href="/wanted"
+                href="/safe-walk"
                 className="ops-label rounded-full border border-ops-border px-3.5 py-2 text-ops-muted transition-colors hover:border-ops-accent/40 hover:text-ops-text"
               >
-                What we buy
+                Safe Walk
               </Link>
               <Link
                 href="#modules"

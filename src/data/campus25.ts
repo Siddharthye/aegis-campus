@@ -114,11 +114,65 @@ export interface Landmark {
 
 /** What a student uses to orient themselves, on and off campus. */
 export const CAMPUS25_LANDMARKS: readonly Landmark[] = [
-  { id: 'ram-setu', name: 'Ram Setu', position: { lat: 20.3585, lng: 85.8166 }, offCampus: true },
+  { id: 'archery', name: 'KIIT-KISS Archery Field', position: { lat: 20.3596, lng: 85.8158 }, offCampus: true },
+  { id: 'kp25', name: 'KP-25 (ABCD)', position: { lat: 20.3529, lng: 85.8158 }, offCampus: true },
   { id: 'idz', name: 'iON Digital Zone', position: { lat: 20.3512, lng: 85.8172 }, offCampus: true },
-  { id: 'otv', name: 'Odisha Television', position: { lat: 20.3524, lng: 85.8240 }, offCampus: true },
-  { id: 'it-park', name: 'IT Park Road', position: { lat: 20.3520, lng: 85.8186 }, offCampus: true },
-  { id: 'lake', name: 'Lake', position: { lat: 20.3580, lng: 85.8160 }, offCampus: true },
+  { id: 'otv-rd', name: 'Odisha Television Rd', position: { lat: 20.3512, lng: 85.8226 }, offCampus: true },
+  { id: 'it-park', name: 'IT Park Rd', position: { lat: 20.3524, lng: 85.8184 }, offCampus: true },
+]
+
+/** Water and open ground, drawn as context rather than obstacles. */
+export interface Terrain {
+  id: string
+  name: string
+  kind: 'water' | 'field'
+  outline: readonly Point[]
+}
+
+/**
+ * Narendra Pond dominates the north-west approach: it is the single most
+ * useful orientation cue on this campus, and the reason the west side has no
+ * through route. The archery field sits beyond its northern shore.
+ */
+export const CAMPUS25_TERRAIN: readonly Terrain[] = [
+  {
+    id: 'narendra-pond',
+    name: 'Narendra Pond',
+    kind: 'water',
+    outline: [
+      { lat: 20.3588, lng: 85.8138 },
+      { lat: 20.3590, lng: 85.8168 },
+      { lat: 20.3570, lng: 85.8178 },
+      { lat: 20.3552, lng: 85.8170 },
+      { lat: 20.3548, lng: 85.8148 },
+      { lat: 20.3566, lng: 85.8134 },
+    ],
+  },
+  {
+    id: 'archery-field',
+    name: 'Archery Field',
+    kind: 'field',
+    outline: [
+      { lat: 20.3600, lng: 85.8150 },
+      { lat: 20.3602, lng: 85.8168 },
+      { lat: 20.3590, lng: 85.8170 },
+      { lat: 20.3588, lng: 85.8152 },
+    ],
+  },
+]
+
+/** The ring road that wraps the campus and carries every vehicle approach. */
+export const CAMPUS25_RING_ROAD: readonly Point[] = [
+  { lat: 20.3527, lng: 85.8186 },
+  { lat: 20.3540, lng: 85.8174 },
+  { lat: 20.3558, lng: 85.8172 },
+  { lat: 20.3573, lng: 85.8182 },
+  { lat: 20.3578, lng: 85.8206 },
+  { lat: 20.3566, lng: 85.8231 },
+  { lat: 20.3543, lng: 85.8238 },
+  { lat: 20.3527, lng: 85.8222 },
+  { lat: 20.3523, lng: 85.8200 },
+  { lat: 20.3527, lng: 85.8186 },
 ]
 
 /**

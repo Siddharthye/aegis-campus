@@ -80,7 +80,13 @@ export function AiConsole({ initialQuestion }: { initialQuestion?: string }) {
     <div className="relative h-[calc(100dvh-3.25rem)] min-h-[560px] overflow-hidden pb-24">
       {/* Full-bleed Spline stage */}
       <div ref={stageRef} className="absolute inset-0 bg-ops-deep">
-        <NexbotAvatar size={200} alert={stats !== null && stats.openIncidents > 3} />
+        <div className="absolute inset-y-0 left-0 grid w-full place-items-center md:w-[62%]">
+          <NexbotAvatar
+            size={260}
+            alert={stats !== null && stats.openIncidents > 3}
+            className="max-w-[46vw]"
+          />
+        </div>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_65%_40%,transparent_18%,rgba(5,7,13,0.55)_78%)]" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-[min(48%,520px)] bg-gradient-to-l from-ops-bg/90 via-ops-bg/35 to-transparent" />
       </div>

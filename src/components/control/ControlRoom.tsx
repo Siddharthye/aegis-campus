@@ -106,17 +106,23 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
       {/* One strip of numbers across the top, so the three columns below start
           at the same line instead of each growing its own header. */}
       <Panel spotlight>
-        <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-5">
+        <div className="grid grid-cols-3 gap-4 p-4 sm:grid-cols-6">
           <Stat value={queue.length} label="open" tone={queue.length ? 'accent' : 'good'} />
           <Stat value={p0} label="P0 active" tone={p0 ? 'danger' : 'good'} />
           <Stat value={breaching} label="SLA breaching" tone={breaching ? 'danger' : 'good'} />
           <Stat value={totalReports} label="reports fused" />
           <Stat value={incidents.length} label="total today" />
+          <Stat
+            value={queue.length ? Math.round(queue[0].pressure * 100) + '%' : '—'}
+            label="top pressure"
+            tone={queue.length && queue[0].breached ? 'danger' : 'accent'}
+            hint="How far through its SLA the most urgent incident is"
+          />
         </div>
       </Panel>
 
-      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.5fr)_minmax(0,0.85fr)]">
-      <div className="flex min-w-0 flex-col gap-3">
+      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.6fr)_minmax(280px,0.9fr)] xl:gap-4">
+      <div className="flex min-w-0 flex-col gap-2.5">
         <p className="ops-label text-ops-muted">
           Queue · {queue.length} open · ranked by SLA pressure
         </p>

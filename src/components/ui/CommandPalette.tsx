@@ -33,7 +33,6 @@ const PAGES: PaletteAction[] = [
   { id: 'analytics', title: 'PULSE analytics', hint: 'Admin', keywords: 'heatmap patrol sla hotspots', href: '/analytics' },
   { id: 'beacon', title: 'BEACON anchor sheets', hint: 'Admin', keywords: 'qr print location', href: '/beacon' },
   { id: 'case', title: 'Check a case', hint: 'VEIL', keywords: 'token anonymous follow up', href: '/case' },
-  { id: 'wanted', title: 'WANTED board', hint: 'Trading floor', keywords: 'buy integrations market', href: '/wanted' },
   { id: 'ai', title: 'NEXBOT console', hint: 'AI copilot', keywords: 'ai chat assistant robot', href: '/ai' },
 ]
 

@@ -42,14 +42,23 @@ export function ReportWizard({ presetLocation = null }: ReportWizardProps = {}) 
   const [queuedOffline, setQueuedOffline] = useState(false)
   const { queue, queued, online } = useOfflineQueue()
 
+  /*
+   * Picking a room on the floor plan answers the "where" question, so the
+   * wizard adopts it and skips ahead rather than asking again. Only jump
+   * forward from the location step — yanking someone off the review screen
+   * because they nudged the plan would be worse than a redundant tap.
+   */
   useEffect(() => {
-    if (presetLocation) setLocation(presetLocation)
+    if (!presetLocation) return
+    setLocation(presetLocation)
+    setStep((current) => (current === 'location' ? 'review' : current))
   }, [presetLocation])
 
   const chooseCategory = (option: (typeof CATEGORY_OPTIONS)[number]) => {
     setCategory(option.category)
     setSeverity(option.defaultSeverity)
-    setStep('location')
+    // A location is already chosen on the plan, so "where" is answered.
+    setStep(presetLocation ? 'review' : 'location')
   }
 
   const submit = async () => {
