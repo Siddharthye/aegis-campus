@@ -5,6 +5,7 @@ import type { DispatchRecommendation } from '@/domain/dispatch'
 import { rankByPressure, type QueueEntry } from '@/domain/queue'
 import type { Incident, IncidentStatus } from '@/domain/types'
 import { useLiveEvents } from '@/hooks/use-live-events'
+import { Chip, Panel, Stat } from '@/components/ui/Panel'
 import { IntegrationSlot } from '@/integrations/slots'
 import { DrillPanel } from './DrillPanel'
 import { IncidentDetail } from './IncidentDetail'
@@ -96,8 +97,25 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
     await Promise.all([refreshIncidents(), refreshSelected(incidentId)])
   }
 
+  const breaching = queue.filter((entry) => entry.breached).length
+  const p0 = queue.filter((entry) => entry.incident.severity === 'P0').length
+  const totalReports = queue.reduce((sum, entry) => sum + entry.incident.reportCount, 0)
+
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,0.9fr)]">
+    <div className="flex min-w-0 flex-col gap-4">
+      {/* One strip of numbers across the top, so the three columns below start
+          at the same line instead of each growing its own header. */}
+      <Panel spotlight>
+        <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-5">
+          <Stat value={queue.length} label="open" tone={queue.length ? 'accent' : 'good'} />
+          <Stat value={p0} label="P0 active" tone={p0 ? 'danger' : 'good'} />
+          <Stat value={breaching} label="SLA breaching" tone={breaching ? 'danger' : 'good'} />
+          <Stat value={totalReports} label="reports fused" />
+          <Stat value={incidents.length} label="total today" />
+        </div>
+      </Panel>
+
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.5fr)_minmax(0,0.85fr)]">
       <div className="flex min-w-0 flex-col gap-3">
         <p className="ops-label text-ops-muted">
           Queue · {queue.length} open · ranked by SLA pressure
@@ -119,12 +137,24 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
             onBroadcast={(message) => broadcast(selected.id, message)}
           />
         ) : (
-          <div className="rounded-lg border border-ops-border bg-ops-panel p-6 text-center">
-            <p className="ops-label text-ops-faint">No incident selected</p>
-            <p className="mt-1.5 text-[12px] text-ops-muted">
-              Select an incident from the queue, or run a drill to generate one.
-            </p>
-          </div>
+          <Panel label="No incident selected" spotlight>
+            <div className="p-5">
+              <p className="text-[13px] leading-relaxed text-ops-muted">
+                Pick an incident from the queue to see its dispatch options, evacuation guidance
+                and audit trail — or run a drill to generate a full one end to end.
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-3 border-t border-ops-border/70 pt-4">
+                <Stat value={queue.length} label="waiting" tone={queue.length ? 'accent' : 'good'} />
+                <Stat value={breaching} label="breaching" tone={breaching ? 'danger' : 'good'} />
+                <Stat value={totalReports} label="reports" />
+              </div>
+              <p className="mt-3 flex flex-wrap gap-1.5">
+                <Chip tone="accent">SSE live</Chip>
+                <Chip>ranked by SLA pressure</Chip>
+                <Chip>fusion on intake</Chip>
+              </p>
+            </div>
+          </Panel>
         )}
       </div>
 
@@ -134,6 +164,7 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
         <IntegrationSlot kind="sensor-feed" label="Sensor feed" showWhenEmpty />
         <IntegrationSlot kind="alert-channel" label="Broadcast channel" />
         <IntegrationSlot kind="analytics-panel" label="Acquired module" />
+      </div>
       </div>
     </div>
   )

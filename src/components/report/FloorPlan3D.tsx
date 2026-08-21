@@ -4,8 +4,10 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { useMemo, useRef, useState } from 'react'
 import {
   FLOOR_CORRIDORS,
-  FLOOR_SPACES,
   FLOOR_WINGS,
+  noteForFloor,
+  spacesForFloor,
+  type FloorId,
   type FloorSpace,
   type SpaceKind,
 } from '@/data/floorplan'
@@ -43,11 +45,14 @@ const KIND_STYLE: Record<SpaceKind, { fill: string; stroke: string; label: strin
 
 export interface FloorSelection {
   space: FloorSpace
+  floor: FloorId
   /** Printed label a dispatcher reads, e.g. "Campus 25 · Floor 2 · C 203". */
   label: string
 }
 
 interface FloorPlan3DProps {
+  /** Which floor to draw. Floors share a grid; only room numbers differ. */
+  floor: FloorId
   selectedId: string | null
   onSelect: (selection: FloorSelection) => void
   /** Rooms to mark as having activity — drawn hot regardless of kind. */
@@ -58,6 +63,7 @@ interface FloorPlan3DProps {
 }
 
 export function FloorPlan3D({
+  floor,
   selectedId,
   onSelect,
   activeIds = [],
@@ -73,10 +79,10 @@ export function FloorPlan3D({
   const rotateX = useSpring(useTransform(py, [0, 1], [46, 34]), { stiffness: 120, damping: 20 })
   const rotateZ = useSpring(useTransform(px, [0, 1], [-26, -14]), { stiffness: 120, damping: 20 })
 
-  const visible = useMemo(
-    () => (wing ? FLOOR_SPACES.filter((space) => space.wing === wing) : FLOOR_SPACES),
-    [wing],
-  )
+  const visible = useMemo(() => {
+    const spaces = spacesForFloor(floor)
+    return wing ? spaces.filter((space) => space.wing === wing) : spaces
+  }, [floor, wing])
   const activeSet = useMemo(() => new Set(activeIds), [activeIds])
 
   const onPointerMove = (event: React.PointerEvent) => {
@@ -143,7 +149,7 @@ export function FloorPlan3D({
               dimmed={hovered !== null && hovered.id !== space.id}
               onHover={setHovered}
               onSelect={() =>
-                onSelect({ space, label: `Campus 25 · Floor 2 · ${space.id}` })
+                onSelect({ space, floor, label: `Campus 25 · Floor ${floor} · ${space.id}` })
               }
             />
           ))}
@@ -162,7 +168,9 @@ export function FloorPlan3D({
                 {hovered ? KIND_STYLE[hovered.kind].label.replace(/s$/, '') : ''}
               </span>
             </p>
-            {hovered?.note && <p className="text-[11px] text-ops-faint">{hovered.note}</p>}
+            {hovered && noteForFloor(hovered.note, floor) && (
+              <p className="text-[11px] text-ops-faint">{noteForFloor(hovered.note, floor)}</p>
+            )}
           </motion.div>
         </div>
       </div>

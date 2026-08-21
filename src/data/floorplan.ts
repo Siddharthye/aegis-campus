@@ -171,16 +171,59 @@ export const FLOOR_WINGS = [
 ]
 
 /**
- * Every floor the layout is published for. Only the second floor is
- * transcribed in full; the others reuse its footprint until their plans are
- * digitised, and the UI says so rather than pretending otherwise.
+ * The floors AEGIS can render.
+ *
+ * Campus 25 stacks: floors 1–3 share one structural grid, so the wings, lifts,
+ * stairs and corridors sit in the same places and only the room numbers change
+ * — B 201 on the second floor is B 101 directly below it. Floor 2 is the one
+ * transcribed from the published plan; 1 and 3 are derived from it by
+ * renumbering, which is honest for navigation and is labelled as derived.
  */
 export const CAMPUS_FLOORS = [
-  { id: 2, label: 'Second Floor', surveyed: true },
   { id: 1, label: 'First Floor', surveyed: false },
+  { id: 2, label: 'Second Floor', surveyed: true },
   { id: 3, label: 'Third Floor', surveyed: false },
-  { id: 4, label: 'Fourth Floor', surveyed: false },
 ] as const
+
+export type FloorId = (typeof CAMPUS_FLOORS)[number]['id']
+
+/**
+ * Renumbers a floor-2 room id onto another floor: `B 201` → `B 101`.
+ *
+ * Only the hundreds digit moves. Anything without a floor-2 room number —
+ * lifts, stairs, washrooms, the named offices — keeps its label, because a
+ * stairwell is the same stairwell on every floor.
+ */
+function renumber(id: string, floor: FloorId): string {
+  return id.replace(/\b([ABC]) 2(\d{2})\b/, (_match, wing: string, room: string) => `${wing} ${floor}${room}`)
+}
+
+/**
+ * The spaces on one floor. Floor 2 is the transcribed plan; the others reuse
+ * its geometry with renumbered rooms.
+ *
+ * @example
+ * spacesForFloor(1).find((space) => space.id === 'B 101') // => the room below B 201
+ */
+export function spacesForFloor(floor: FloorId): FloorSpace[] {
+  if (floor === 2) return [...FLOOR_SPACES]
+
+  return FLOOR_SPACES.map((space) => {
+    const id = renumber(space.id, floor)
+    return { ...space, id, label: id }
+  })
+}
+
+/**
+ * Named offices only exist where the published plan puts them, so a derived
+ * floor should not claim to hold the Society Office.
+ *
+ * @example
+ * noteForFloor('Faculty Chambers', 3) // => undefined
+ */
+export function noteForFloor(note: string | undefined, floor: FloorId): string | undefined {
+  return floor === 2 ? note : undefined
+}
 
 /**
  * Looks up a space by its printed room number.

@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CAMPUS_CENTRE } from '@/data/campus'
-import { CAMPUS_FLOORS, FLOOR_SPACES, FLOOR_WINGS } from '@/data/floorplan'
+import {
+  CAMPUS_FLOORS,
+  FLOOR_WINGS,
+  noteForFloor,
+  spacesForFloor,
+  type FloorId,
+} from '@/data/floorplan'
 import type { Incident, LocatedPosition } from '@/domain/types'
 import { readSla } from '@/domain/sla'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
@@ -26,6 +32,7 @@ const PIPELINE_EVENTS = ['incident.created', 'incident.updated'] as const
 export function ReportWorkspace() {
   const [selection, setSelection] = useState<FloorSelection | null>(null)
   const [wing, setWing] = useState<'A' | 'B' | 'C' | null>(null)
+  const [floor, setFloor] = useState<FloorId>(2)
   const [incidents, setIncidents] = useState<Incident[]>([])
 
   const refresh = useCallback(async () => {
@@ -48,13 +55,15 @@ export function ReportWorkspace() {
     [incidents],
   )
 
+  const spaces = useMemo(() => spacesForFloor(floor), [floor])
+
   /* Rooms with an open incident, so the plan shows where trouble already is. */
   const activeRoomIds = useMemo(() => {
     const labels = new Set(open.map((incident) => incident.location.label))
-    return FLOOR_SPACES.filter((space) =>
-      [...labels].some((label) => label.includes(space.id)),
-    ).map((space) => space.id)
-  }, [open])
+    return spaces
+      .filter((space) => [...labels].some((label) => label.includes(space.id)))
+      .map((space) => space.id)
+  }, [open, spaces])
 
   /**
    * A room pick becomes a real located position. Confidence sits between a
@@ -68,24 +77,39 @@ export function ReportWorkspace() {
         label: selection.label,
         method: 'map-tap',
         confidence: 0.85,
-        floor: 2,
+        floor: selection.floor,
         buildingId: `block-${selection.space.wing.toLowerCase()}`,
       }
     : null
 
   const byWing = FLOOR_WINGS.map((entry) => ({
     ...entry,
-    count: FLOOR_SPACES.filter((space) => space.wing === entry.id).length,
+    count: spaces.filter((space) => space.wing === entry.id).length,
   }))
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(380px,0.85fr)]">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.85fr)]">
       {/* ── The floor ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
         <Panel
-          label="Campus 25 · Second Floor"
+          label={`Campus 25 · ${CAMPUS_FLOORS.find((entry) => entry.id === floor)?.label}`}
           aside={
             <>
+              {CAMPUS_FLOORS.map((entry) => (
+                <Chip
+                  key={entry.id}
+                  active={floor === entry.id}
+                  onClick={() => setFloor(entry.id)}
+                  title={
+                    entry.surveyed
+                      ? 'Transcribed from the published plan'
+                      : 'Same structural grid, room numbers derived'
+                  }
+                >
+                  F{entry.id}
+                </Chip>
+              ))}
+              <span aria-hidden className="mx-0.5 h-4 w-px bg-ops-border" />
               <Chip active={wing === null} onClick={() => setWing(null)}>
                 All
               </Chip>
@@ -101,15 +125,16 @@ export function ReportWorkspace() {
               ))}
             </>
           }
-          className="min-h-[560px]"
+          className="min-w-0"
         >
           <div className="p-3 pb-4">
             <FloorPlan3D
+              floor={floor}
               selectedId={selection?.space.id ?? null}
               onSelect={setSelection}
               activeIds={activeRoomIds}
               wing={wing}
-              className="h-[470px]"
+              className="h-[300px] sm:h-[400px] xl:h-[470px]"
             />
           </div>
         </Panel>
@@ -117,26 +142,40 @@ export function ReportWorkspace() {
         <div className="grid gap-4 sm:grid-cols-3">
           <Panel label="This floor" spotlight>
             <div className="grid grid-cols-3 gap-3 p-4">
-              <Stat value={FLOOR_SPACES.length} label="spaces" />
+              <Stat value={spaces.length} label="spaces" />
               <Stat value={activeRoomIds.length} label="active" tone={activeRoomIds.length ? 'danger' : 'good'} />
               <Stat value={3} label="wings" tone="accent" />
             </div>
           </Panel>
 
-          <Panel label="Other floors" className="sm:col-span-2">
+          <Panel label="Floors" className="sm:col-span-2">
             <ul className="flex flex-col gap-1.5 p-3">
-              {CAMPUS_FLOORS.map((floor) => (
-                <li key={floor.id} className="flex items-center gap-3 rounded-lg bg-ops-bg/60 px-3 py-2">
-                  <span className="font-mono text-[12px] text-ops-text">{floor.label}</span>
-                  <span className="ml-auto">
-                    {floor.surveyed ? (
-                      <Chip tone="good">Surveyed</Chip>
-                    ) : (
-                      <Chip title="Plan not yet digitised — reports fall back to QR anchors and GPS">
-                        Plan pending
-                      </Chip>
-                    )}
-                  </span>
+              {CAMPUS_FLOORS.map((entry) => (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => setFloor(entry.id)}
+                    aria-pressed={floor === entry.id}
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
+                      floor === entry.id ? 'bg-ops-accent/10' : 'bg-ops-bg/60 hover:bg-ops-lift/60'
+                    }`}
+                  >
+                    <span
+                      className={`size-1.5 shrink-0 rounded-full ${
+                        floor === entry.id ? 'bg-ops-accent' : 'bg-ops-border'
+                      }`}
+                    />
+                    <span className="font-mono text-[12px] text-ops-text">{entry.label}</span>
+                    <span className="ml-auto">
+                      {entry.surveyed ? (
+                        <Chip tone="good">Surveyed</Chip>
+                      ) : (
+                        <Chip title="Same structural grid as floor 2; room numbers derived">
+                          Derived
+                        </Chip>
+                      )}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -156,7 +195,8 @@ export function ReportWorkspace() {
               <>
                 <p className="font-mono text-lg font-bold text-ops-text">{selection.space.id}</p>
                 <p className="mt-0.5 text-[12px] text-ops-muted">
-                  {selection.space.note ?? `${selection.space.wing} Block · ${selection.space.kind}`}
+                  {noteForFloor(selection.space.note, selection.floor) ??
+                    `${selection.space.wing} Block · Floor ${selection.floor} · ${selection.space.kind}`}
                 </p>
                 <p className="mt-2 text-[11px] leading-relaxed text-ops-faint">
                   Picked from the plan. Scanning the printed QR anchor in this room raises it to
