@@ -7,7 +7,6 @@ import { Manifesto } from '@/components/landing/Manifesto'
 import { ModuleGrid } from '@/components/landing/ModuleGrid'
 import { NexbotShowcase } from '@/components/landing/NexbotShowcase'
 import { SmoothScroll } from '@/components/landing/SmoothScroll'
-import { Nexbot } from '@/components/nexbot/Nexbot'
 
 /**
  * The AEGIS landing page: a cinematic scroll story built from the same design
@@ -27,7 +26,6 @@ export default function LandingPage() {
         <Manifesto />
       </main>
       <Footer />
-      <Nexbot />
     </SmoothScroll>
   )
 }

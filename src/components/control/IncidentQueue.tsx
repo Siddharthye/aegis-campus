@@ -17,7 +17,7 @@ interface IncidentQueueProps {
 export function IncidentQueue({ entries, selectedId, onSelect }: IncidentQueueProps) {
   if (entries.length === 0) {
     return (
-      <div className="rounded-lg border border-ops-border bg-ops-panel p-6 text-center">
+      <div className="px-3 py-8 text-center">
         <p className="ops-label text-emerald-400">Board clear</p>
         <p className="mt-1.5 text-[12px] text-ops-muted">
           No open incidents. Every SLA clock is stopped.
@@ -27,7 +27,7 @@ export function IncidentQueue({ entries, selectedId, onSelect }: IncidentQueuePr
   }
 
   return (
-    <ul className="flex flex-col gap-1.5">
+    <ul className="flex flex-col gap-1">
       {entries.map(({ incident, breached, minutesRemaining }) => {
         const isSelected = incident.id === selectedId
 
@@ -37,10 +37,10 @@ export function IncidentQueue({ entries, selectedId, onSelect }: IncidentQueuePr
               type="button"
               onClick={() => onSelect(incident.id)}
               aria-current={isSelected}
-              className={`w-full rounded-lg border p-3 text-left transition-colors ${
+              className={`w-full rounded-lg p-2.5 text-left transition-colors ${
                 isSelected
-                  ? 'border-ops-accent/50 bg-ops-lift'
-                  : 'border-ops-border bg-ops-panel hover:border-ops-accent/30 hover:bg-ops-lift'
+                  ? 'bg-ops-accent/12 ring-1 ring-inset ring-ops-accent/40'
+                  : 'hover:bg-ops-lift/60'
               }`}
             >
               <div className="flex items-center gap-2">

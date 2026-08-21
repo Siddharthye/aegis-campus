@@ -1,5 +1,5 @@
 import { SAFE_ZONES, type SafeZone } from '@/data/safe-zones'
-import { listBuildings } from './beacon'
+import { listBuildings } from './campus-geometry'
 import { distanceInMetres } from './dispatch'
 import type { Coordinates, Incident, Severity } from './types'
 

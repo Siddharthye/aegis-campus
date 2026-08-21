@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import type { BeaconAnchor } from '@/domain/beacon'
-import { locationFromAnchor, locationFromGps, locationFromMapTap } from '@/domain/beacon'
+import { useState } from 'react'
+import { locationFromGps, locationFromMapTap } from '@/domain/campus-geometry'
 import type { LocatedPosition } from '@/domain/types'
 import { CampusPlan } from './CampusPlan'
 
@@ -14,33 +13,18 @@ interface LocationStepProps {
 /**
  * Step 2 — where the incident is, and how sure we are.
  *
- * BEACON in practice: a scanned QR anchor resolves to a building, floor and
- * spot at 99%; a map tap knows the building at 70%; raw GPS knows a vicinity
- * at 40% and has no idea what floor you are on. The confidence is shown rather
- * than hidden, because a dispatcher makes better decisions when the system
- * admits what it does not know.
+ * Three honest methods, in descending precision: a room picked on the floor
+ * plan (85%, carries a floor), a tap on the campus map (70%, building only),
+ * and raw GPS (40%, a vicinity with no floor at all). The confidence is shown
+ * rather than hidden, because a dispatcher makes better decisions when the
+ * system admits what it does not know.
+ *
+ * There is no code to scan. Anyone who can reach for a printed sticker can
+ * reach for the map, and someone who cannot reach for either needs SENTINEL,
+ * not a better address field.
  */
 export function LocationStep({ location, onChange }: LocationStepProps) {
-  const [anchors, setAnchors] = useState<BeaconAnchor[]>([])
-  const [anchorQuery, setAnchorQuery] = useState('')
   const [gpsState, setGpsState] = useState<'idle' | 'locating' | 'denied'>('idle')
-
-  useEffect(() => {
-    void fetch('/api/beacon/anchors')
-      .then((response) => response.json() as Promise<{ anchors: BeaconAnchor[] }>)
-      .then((body) => setAnchors(body.anchors))
-      .catch(() => {
-        // Anchors unavailable — map tap and GPS still work.
-      })
-  }, [])
-
-  const matches = anchorQuery.trim().length === 0
-    ? []
-    : anchors
-        .filter((anchor) =>
-          `${anchor.id} ${anchor.label}`.toLowerCase().includes(anchorQuery.trim().toLowerCase()),
-        )
-        .slice(0, 6)
 
   const useGps = () => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -61,46 +45,16 @@ export function LocationStep({ location, onChange }: LocationStepProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <section className="rounded-lg border border-ops-border bg-ops-panel p-3">
-        <label htmlFor="anchor-search" className="ops-label text-ops-accent">
-          Scan or enter a QR anchor — 99% precise
-        </label>
-        <input
-          id="anchor-search"
-          value={anchorQuery}
-          onChange={(event) => setAnchorQuery(event.target.value)}
-          placeholder="BLK-C-F3-A1"
-          className="mt-1.5 w-full rounded-md border border-ops-border bg-ops-bg px-2.5 py-2 font-mono text-[13px] uppercase text-ops-text placeholder:text-ops-faint focus:border-ops-accent/50 focus:outline-none"
-        />
-
-        {matches.length > 0 && (
-          <ul className="mt-1.5 flex flex-col gap-1">
-            {matches.map((anchor) => (
-              <li key={anchor.id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(locationFromAnchor(anchor))
-                    setAnchorQuery('')
-                  }}
-                  className="w-full rounded-md border border-ops-border bg-ops-bg px-2.5 py-2 text-left transition-colors hover:border-ops-accent/40 hover:bg-ops-lift"
-                >
-                  <p className="font-mono text-[11px] text-ops-accent">{anchor.id}</p>
-                  <p className="text-[12px] text-ops-text">{anchor.label}</p>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <p className="mt-1.5 text-[11px] text-ops-faint">
-          Anchors are printed sheets taped to stairwells and corridors. Scanning one is the only
-          way to resolve a floor — GPS cannot.
+      <div className="rounded-lg border border-ops-accent/30 bg-ops-accent/5 p-3">
+        <p className="ops-label text-ops-accent">Most precise · pick a room</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-ops-muted">
+          Tap your room on the floor plan beside this form. That resolves a building, a floor and
+          a room — the only thing GPS can never give you.
         </p>
-      </section>
+      </div>
 
       <div className="flex flex-col gap-1.5">
-        <p className="ops-label text-ops-muted">Or tap the plan — 70%</p>
+        <p className="ops-label text-ops-muted">Or tap the campus map — 70%</p>
         <CampusPlan
           marker={location}
           onPick={(point) => onChange(locationFromMapTap(point.lat, point.lng))}
@@ -117,7 +71,7 @@ export function LocationStep({ location, onChange }: LocationStepProps) {
       </button>
       {gpsState === 'denied' && (
         <p className="text-[11px] text-sev-p1">
-          GPS unavailable. Use a QR anchor or tap the plan.
+          GPS unavailable. Pick a room on the floor plan or tap the campus map.
         </p>
       )}
 

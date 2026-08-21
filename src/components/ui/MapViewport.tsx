@@ -17,7 +17,11 @@ import { Crosshair, Maximize2, Minus, Move, Plus, X } from 'lucide-react'
 
 const MIN_SCALE = 0.6
 const MAX_SCALE = 6
-const ZOOM_STEP = 1.35
+/** Button step. Wheel uses a far gentler per-notch factor — see onWheel. */
+const ZOOM_STEP = 1.25
+
+/** Per-wheel-notch zoom. Trackpads emit many small deltas; this keeps them calm. */
+const WHEEL_SENSITIVITY = 0.0015
 
 interface MapViewportProps {
   children: React.ReactNode
@@ -68,11 +72,11 @@ export function MapViewport({ children, label, actions, className = '' }: MapVie
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
       const box = frame.getBoundingClientRect()
-      zoomAbout(
-        event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP,
-        event.clientX - box.left,
-        event.clientY - box.top,
-      )
+      // Scale continuously with the delta rather than stepping per event: a
+      // trackpad fires dozens of small deltas per gesture, and a fixed step
+      // per event made the map leap across several zoom levels at once.
+      const factor = Math.exp(-event.deltaY * WHEEL_SENSITIVITY)
+      zoomAbout(factor, event.clientX - box.left, event.clientY - box.top)
     }
 
     frame.addEventListener('wheel', onWheel, { passive: false })
@@ -127,7 +131,7 @@ export function MapViewport({ children, label, actions, className = '' }: MapVie
         className="size-full origin-top-left"
         style={{
           transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${scale})`,
-          transition: panning ? 'none' : 'transform 160ms cubic-bezier(0.22, 1, 0.36, 1)',
+          transition: panning ? 'none' : 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
         {children}

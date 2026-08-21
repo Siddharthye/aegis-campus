@@ -33,7 +33,7 @@ export interface LocatedPosition extends Coordinates {
   /** Human-readable place, e.g. "Block C · Floor 3 · Room 302". */
   label: string
   /** How the position was obtained — drives the confidence shown in the UI. */
-  method: 'qr-anchor' | 'gps' | 'map-tap' | 'wifi'
+  method: 'floor-plan' | 'gps' | 'map-tap'
   /** 0–1. QR anchors are ~0.99; raw GPS is ~0.4 and has no floor. */
   confidence: number
   /** Present only when the method can resolve one (QR anchors can). */

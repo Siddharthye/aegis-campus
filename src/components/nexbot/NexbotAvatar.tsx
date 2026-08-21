@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 /**
  * The NEXBOT robot — a 3D head that watches your cursor.
@@ -34,6 +34,7 @@ interface NexbotAvatarProps {
 
 export function NexbotAvatar({ size = 52, alert = false, className = '' }: NexbotAvatarProps) {
   const reduceMotion = useReducedMotion()
+  const rootRef = useRef<HTMLDivElement>(null)
 
   // -1 … 1 on each axis, relative to the viewport centre.
   const pointerX = useMotionValue(0)
@@ -52,9 +53,26 @@ export function NexbotAvatar({ size = 52, alert = false, className = '' }: Nexbo
   useEffect(() => {
     if (reduceMotion) return
 
+    /*
+     * Direction is measured from the robot's *own* centre, not the viewport's.
+     * Tracking against the viewport made every robot that was not dead-centre
+     * look the wrong way — the dock robot stared past the cursor, and the
+     * showcase robot leaned away from it.
+     *
+     * The falloff distance is proportional to the robot's size, so a 30px dock
+     * tile and a 260px showcase robot both reach full turn at a sensible
+     * distance instead of the small one twitching at full deflection.
+     */
     const track = (event: PointerEvent) => {
-      pointerX.set((event.clientX / window.innerWidth) * 2 - 1)
-      pointerY.set((event.clientY / window.innerHeight) * 2 - 1)
+      const box = rootRef.current?.getBoundingClientRect()
+      if (!box) return
+
+      const centreX = box.left + box.width / 2
+      const centreY = box.top + box.height / 2
+      const reach = Math.max(240, box.width * 6)
+
+      pointerX.set(Math.max(-1, Math.min(1, (event.clientX - centreX) / reach)))
+      pointerY.set(Math.max(-1, Math.min(1, (event.clientY - centreY) / reach)))
     }
 
     window.addEventListener('pointermove', track, { passive: true })
@@ -66,6 +84,7 @@ export function NexbotAvatar({ size = 52, alert = false, className = '' }: Nexbo
 
   return (
     <div
+      ref={rootRef}
       className={`pointer-events-none select-none ${className}`}
       style={{ width: size, height: size, perspective: size * 3.4 }}
       aria-hidden="true"

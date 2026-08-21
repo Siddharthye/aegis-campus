@@ -1,6 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto'
 import { CAMPUS_CENTRE } from '@/data/campus'
-import { nearestBuilding } from '@/domain/beacon'
+import { nearestBuilding } from '@/domain/campus-geometry'
 import { publicSession, sha256Hex, SENTINEL_COLLECTION, type SentinelSession } from '@/domain/sentinel-session'
 import { ok, parseBody } from '@/lib/http'
 import { armSentinelSchema } from '@/lib/sentinel-schemas'

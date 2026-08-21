@@ -3,10 +3,17 @@ import { distanceInMetres } from './dispatch'
 import type { Coordinates, LocatedPosition } from './types'
 
 /**
- * BEACON — indoor location, made honest. GPS cannot resolve a floor, so AEGIS
- * plants QR anchors: printed codes bound to a building + floor + spot. This
- * module derives the whole anchor registry deterministically from the campus
- * footprint data — no database, same registry on every machine.
+ * Campus geometry — the shared answer to "where is this?".
+ *
+ * Every position records how it was obtained and how far to trust it, because
+ * pretending GPS works indoors is how campus safety products fail. Raw GPS is
+ * a vicinity with no floor; a tap on the campus map names a building; a room
+ * picked on the floor plan names a room *and* a floor.
+ *
+ * There is deliberately no printed-code scheme here. Asking someone who is
+ * being followed to find and scan a sticker is a fantasy, and the interactive
+ * floor plan already resolves a room with no physical infrastructure to print,
+ * mount, replace or vandalise.
  */
 
 /** A campus building with its centroid and footprint ring (pure data). */
@@ -21,30 +28,14 @@ export interface CampusBuilding {
   footprint: Coordinates[]
 }
 
-/** One printed QR anchor: a physical point that resolves to room-level truth. */
-export interface BeaconAnchor {
-  /** Printed code, e.g. "BLK-C-F3-A1" — also what the QR deep link carries. */
-  id: string
-  label: string
-  buildingId: string
-  buildingName: string
-  floor: number
-  spot: 'Stairwell' | 'Corridor'
-  lat: number
-  lng: number
-}
-
-/** Confidence per location method — shown honestly in the report UI. */
-export const METHOD_CONFIDENCE = { 'qr-anchor': 0.99, 'map-tap': 0.7, gps: 0.4 } as const
-
-const ABBREVIATIONS: Record<string, string> = { block: 'BLK', hostel: 'HST' }
-
-/** "block-c" → "BLK-C", "hostel-8" → "HST-8", "library" → "LIB". */
-const codeFor = (buildingId: string): string =>
-  buildingId
-    .split('-')
-    .map((word) => (/^\d+$/.test(word) ? word : (ABBREVIATIONS[word] ?? word.slice(0, 3).toUpperCase())))
-    .join('-')
+/**
+ * Confidence per location method, shown honestly in the report UI.
+ *
+ * A room picked on the floor plan sits well above raw GPS because it carries a
+ * floor, but below certainty: the reporter named the room, nothing verified
+ * they are standing in it.
+ */
+export const METHOD_CONFIDENCE = { 'floor-plan': 0.85, 'map-tap': 0.7, gps: 0.4 } as const
 
 const toBuilding = (feature: (typeof campusGeoJSON)['features'][number]): CampusBuilding => {
   const ring = feature.geometry.coordinates[0].slice(0, -1) // drop the closing vertex
@@ -69,35 +60,6 @@ export function listBuildings(): readonly CampusBuilding[] {
   return BUILDINGS
 }
 
-const ANCHOR_SPOTS: readonly BeaconAnchor['spot'][] = ['Stairwell', 'Corridor']
-
-const ANCHORS: readonly BeaconAnchor[] = BUILDINGS.flatMap((building) =>
-  Array.from({ length: building.floors }, (_, index) => index + 1).flatMap((floor) =>
-    ANCHOR_SPOTS.map((spot, spotIndex) => ({
-      id: `${codeFor(building.id)}-F${floor}-A${spotIndex + 1}`,
-      label: `${building.shortName} · Floor ${floor} · ${spot}`,
-      buildingId: building.id,
-      buildingName: building.shortName,
-      floor,
-      spot,
-      lat: building.centre.lat,
-      lng: building.centre.lng,
-    })),
-  ),
-)
-
-/**
- * The full deterministic anchor registry: two anchors (stairwell + corridor)
- * per floor, per building. Printing these sheets IS the BEACON deployment.
- *
- * @example
- * buildAnchors().find((a) => a.id === 'BLK-C-F3-A1')?.label
- * // => "Block C · Floor 3 · Stairwell"
- */
-export function buildAnchors(): readonly BeaconAnchor[] {
-  return ANCHORS
-}
-
 /**
  * The building whose centroid is closest to a point, with the distance —
  * the best label GPS or a map tap can honestly claim.
@@ -105,7 +67,10 @@ export function buildAnchors(): readonly BeaconAnchor[] {
  * @example
  * nearestBuilding(20.3536, 85.8195).building.shortName // => "Block D"
  */
-export function nearestBuilding(lat: number, lng: number): { building: CampusBuilding; distanceM: number } {
+export function nearestBuilding(
+  lat: number,
+  lng: number,
+): { building: CampusBuilding; distanceM: number } {
   let best = BUILDINGS[0]
   let bestDistance = Number.POSITIVE_INFINITY
   for (const building of BUILDINGS) {
@@ -116,24 +81,6 @@ export function nearestBuilding(lat: number, lng: number): { building: CampusBui
     }
   }
   return { building: best, distanceM: Math.round(bestDistance) }
-}
-
-/**
- * A scanned QR anchor as an incident location: room-level, floor-aware, 99%.
- *
- * @example
- * locationFromAnchor(anchor).confidence // => 0.99
- */
-export function locationFromAnchor(anchor: BeaconAnchor): LocatedPosition {
-  return {
-    lat: anchor.lat,
-    lng: anchor.lng,
-    label: anchor.label,
-    method: 'qr-anchor',
-    confidence: METHOD_CONFIDENCE['qr-anchor'],
-    floor: anchor.floor,
-    buildingId: anchor.buildingId,
-  }
 }
 
 /**

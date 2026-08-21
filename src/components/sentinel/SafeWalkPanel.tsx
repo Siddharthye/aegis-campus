@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { CAMPUS_CENTRE } from '@/data/campus'
-import { listBuildings } from '@/domain/beacon'
+import { listBuildings } from '@/domain/campus-geometry'
 import {
   CHECK_IN_INTERVAL_MS,
   MISSED_CHECK_INS_BEFORE_ESCALATION,

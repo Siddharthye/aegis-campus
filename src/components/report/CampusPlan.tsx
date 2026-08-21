@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { listBuildings } from '@/domain/beacon'
+import { listBuildings } from '@/domain/campus-geometry'
 import type { Coordinates } from '@/domain/types'
 import { createPlanProjection, footprintPoints } from './plan-math'
 

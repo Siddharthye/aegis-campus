@@ -11,13 +11,6 @@ const EASE = [0.22, 1, 0.36, 1] as const
 
 const HEADLINE_LINES = ['Every second,', 'accounted for.']
 
-const NAV_LINKS = [
-  { href: '/control', label: 'Control Room' },
-  { href: '/analytics', label: 'Analytics' },
-  { href: '/ai', label: 'NEXBOT' },
-  { href: '/safe-walk', label: 'Safe Walk' },
-]
-
 interface LiveStats {
   openIncidents: number
   respondersAvailable: number
@@ -82,18 +75,6 @@ export function Hero() {
               <ShieldMark />
               <span className="font-mono text-sm font-bold tracking-widest">AEGIS</span>
             </Link>
-
-            <div className="mx-auto hidden items-center gap-1 md:flex">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-full px-3.5 py-1.5 text-[13px] font-medium text-ops-muted transition-colors hover:bg-ops-panel hover:text-ops-text"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
 
             <Link
               href="/report"

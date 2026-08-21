@@ -1,4 +1,4 @@
-import type { CampusBuilding } from '@/domain/beacon'
+import type { CampusBuilding } from '@/domain/campus-geometry'
 import type { Coordinates } from '@/domain/types'
 
 /**

@@ -342,7 +342,7 @@ export function buildDemoHistory(seed: number, until: Date = new Date()): Incide
         lat: building.lat,
         lng: building.lng,
         label: building.name,
-        method: anchored ? 'qr-anchor' : 'gps',
+        method: anchored ? 'floor-plan' : 'gps',
         confidence: anchored ? 0.99 : 0.4,
         buildingId,
       },

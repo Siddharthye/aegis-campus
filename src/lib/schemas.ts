@@ -29,7 +29,7 @@ const locationSchema = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   label: z.string().min(1).max(160),
-  method: z.enum(['qr-anchor', 'gps', 'map-tap', 'wifi']),
+  method: z.enum(['floor-plan', 'gps', 'map-tap']),
   confidence: z.number().min(0).max(1),
   floor: z.number().int().min(-2).max(30).optional(),
   buildingId: z.string().max(60).optional(),

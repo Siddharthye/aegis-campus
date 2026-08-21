@@ -32,7 +32,7 @@ const incident = (overrides: Partial<Incident> = {}): Incident =>
     status: 'reported' as IncidentStatus,
     title: 'Smoke in Block C stairwell',
     description: 'Smoke on the third floor landing of the east stairwell',
-    location: { ...CENTRE, label: 'Block C', method: 'qr-anchor', confidence: 0.99 },
+    location: { ...CENTRE, label: 'Block C', method: 'floor-plan', confidence: 0.99 },
     createdAt: NOW.toISOString(),
     reportCount: 1,
     ...overrides,

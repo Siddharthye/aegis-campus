@@ -1,4 +1,3 @@
-import { Nexbot } from '@/components/nexbot/Nexbot'
 
 interface OpsShellProps {
   title: string
@@ -67,7 +66,6 @@ export function OpsShell({
         {children}
       </div>
 
-      <Nexbot />
     </div>
   )
 }

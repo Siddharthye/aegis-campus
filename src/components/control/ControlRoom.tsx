@@ -121,13 +121,21 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
         </div>
       </Panel>
 
-      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.6fr)_minmax(280px,0.9fr)] xl:gap-4">
-      <div className="flex min-w-0 flex-col gap-2.5">
-        <p className="ops-label text-ops-muted">
-          Queue · {queue.length} open · ranked by SLA pressure
-        </p>
-        <IncidentQueue entries={queue} selectedId={selectedId} onSelect={setSelectedId} />
-      </div>
+      <div className="grid min-w-0 items-start gap-3 lg:grid-cols-[minmax(250px,0.8fr)_minmax(0,1.7fr)_minmax(270px,0.85fr)] xl:gap-4">
+      <Panel
+        label="Queue"
+        aside={
+          <Chip tone={breaching ? 'danger' : queue.length ? 'accent' : 'good'}>
+            {queue.length} open
+          </Chip>
+        }
+        className="min-w-0"
+      >
+        <div className="p-2.5">
+          <p className="ops-label mb-2 px-1 text-ops-faint">Ranked by SLA pressure</p>
+          <IncidentQueue entries={queue} selectedId={selectedId} onSelect={setSelectedId} />
+        </div>
+      </Panel>
 
       <div className="min-w-0">
         {selected ? (
@@ -166,6 +174,7 @@ export function ControlRoom({ initialIncidentId }: { initialIncidentId?: string 
 
       <div className="flex min-w-0 flex-col gap-3">
         <SentinelLane />
+
         <DrillPanel onPipelineChange={() => void refreshIncidents()} />
         <IntegrationSlot kind="sensor-feed" label="Sensor feed" showWhenEmpty />
         <IntegrationSlot kind="alert-channel" label="Broadcast channel" />
