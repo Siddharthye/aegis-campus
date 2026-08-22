@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { estimateArrival } from '@/domain/dispatch'
+import { judgeAssignment } from '@/domain/dispatch-escalation'
 import type { Incident, Responder } from '@/domain/types'
 import { useLiveEvents } from '@/hooks/use-live-events'
+import { useLiveClock } from '@/components/ui/use-live-clock'
 
 const MOVEMENT_EVENTS = ['responder.moved'] as const
 
@@ -17,6 +19,7 @@ const MOVEMENT_EVENTS = ['responder.moved'] as const
  */
 export function AssignedUnits({ incident }: { incident: Incident }) {
   const [responders, setResponders] = useState<Responder[]>([])
+  const now = useLiveClock()
 
   const refresh = useCallback(async () => {
     const response = await fetch('/api/responders')
@@ -37,6 +40,29 @@ export function AssignedUnits({ incident }: { incident: Incident }) {
     incident.assignedResponderIds.includes(responder.id),
   )
   if (assigned.length === 0) return null
+
+  /* The acknowledgement ladder runs against the assignment, not against each
+     responder — one incident, one clock, one escalation.
+
+     Movement counts as acknowledgement: a responder who is en route or on
+     scene has plainly seen the job, whatever button they did or did not
+     press. Only genuine silence escalates. */
+  const dispatchedAt = incident.timeline.find((event) => event.action === 'dispatched')?.at
+  const answered = assigned.some(
+    (responder) => responder.status === 'en-route' || responder.status === 'on-scene',
+  )
+  const silence =
+    now && dispatchedAt
+      ? judgeAssignment(
+          {
+            severity: incident.severity,
+            assignedAt: dispatchedAt,
+            acknowledgedAt: answered ? (incident.timeline.at(-1)?.at ?? null) : null,
+            tier: 'responder',
+          },
+          now,
+        )
+      : null
 
   return (
     <section className="rounded-lg border border-ops-border bg-ops-panel p-4">
@@ -76,6 +102,12 @@ export function AssignedUnits({ incident }: { incident: Incident }) {
           )
         })}
       </ul>
+
+      {silence?.overdue && (
+        <p className="mt-2.5 rounded-md border border-sev-p0/40 bg-sev-p0/10 px-2.5 py-2 text-[11px] leading-relaxed text-sev-p0">
+          {silence.reason}
+        </p>
+      )}
     </section>
   )
 }
