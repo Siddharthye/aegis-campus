@@ -6,6 +6,7 @@ import type { Incident, IncidentStatus } from '@/domain/types'
 import { SeverityBadge } from '@/components/ops/SeverityBadge'
 import { StatusBadge } from '@/components/ops/StatusBadge'
 import { AssignedUnits } from './AssignedUnits'
+import { AnnounceButton } from './AnnounceButton'
 import { BroadcastComposer } from './BroadcastComposer'
 import { EvacuationPanel } from './EvacuationPanel'
 import { EvidenceStrip } from './EvidenceStrip'
@@ -185,6 +186,7 @@ export function IncidentDetail({
                 placeholder="Evacuate via the west stairwell. Do not use lifts."
                 className="min-w-0 flex-1 rounded-md border border-ops-border bg-ops-bg px-2.5 py-1.5 text-[12px] text-ops-text placeholder:text-ops-faint focus:border-ops-accent/50 focus:outline-none"
               />
+              <AnnounceButton text={broadcastMessage} />
               <button
                 type="button"
                 disabled={busy || broadcastMessage.trim().length === 0}
@@ -195,7 +197,8 @@ export function IncidentDetail({
               </button>
             </div>
             <p className="mt-1.5 text-[11px] text-ops-faint">
-              Delivered by SIREN to everyone inside the incident geofence.
+              Delivered by SIREN to everyone inside the incident geofence, and
+              read aloud over the campus speakers in the language it is written in.
             </p>
           </section>
         </>

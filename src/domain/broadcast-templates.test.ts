@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   BROADCAST_LANGUAGES,
   BROADCAST_TEMPLATES,
+  detectLanguage,
   renderAllLanguages,
   renderTemplate,
   templatesFor,
@@ -81,5 +82,24 @@ describe('templatesFor', () => {
   it('ranks general-purpose templates above unrelated ones', () => {
     const ranked = templatesFor('fire').map((template) => template.category)
     expect(ranked.indexOf('general')).toBeLessThan(ranked.lastIndexOf('medical'))
+  })
+})
+
+describe('detectLanguage', () => {
+  it('reads the language from the script the message is written in', () => {
+    expect(detectLanguage('ଅଗ୍ନିକାଣ୍ଡ — ତୁରନ୍ତ ବାହାରକୁ ଯାଆନ୍ତୁ')).toBe('or')
+    expect(detectLanguage('आग लगी है। तुरंत बाहर निकलें।')).toBe('hi')
+    expect(detectLanguage('FIRE at Central Library. Evacuate immediately.')).toBe('en')
+  })
+
+  it('picks the Indic script when a message mixes it with English', () => {
+    // Templates name the place in English inside a translated sentence, so
+    // the Indic script has to win or every Hindi alert would speak English.
+    expect(detectLanguage('आग — Central Library. तुरंत बाहर निकलें।')).toBe('hi')
+  })
+
+  it('falls back to English rather than refusing to speak', () => {
+    expect(detectLanguage('')).toBe('en')
+    expect(detectLanguage('12:45')).toBe('en')
   })
 })

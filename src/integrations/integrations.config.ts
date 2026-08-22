@@ -57,6 +57,18 @@ export const INTEGRATIONS: readonly Integration[] = [
     enabled: true,
   },
 
+  {
+    id: 'vernacular-voice',
+    name: 'Vernacular voice announcements',
+    kind: 'alert-channel',
+    // Runs in the browser rather than over HTTP, so there is no origin to
+    // proxy. See vendor/vernacular-voice/ for the contract and the port.
+    mount: 'rest',
+    src: '/control',
+    vendor: 'JanSetu (JS-VOICE-ACTIVE-2026-PROD-LIVE)',
+    enabled: true,
+  },
+
   // ── Further acquisitions go below this line ────────────────────────────
   // Buyer: Team PROMPT & PRAY (HA-040-7800).
   //

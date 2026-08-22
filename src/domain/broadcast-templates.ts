@@ -143,3 +143,22 @@ export function templatesFor(category: IncidentCategory): BroadcastTemplate[] {
     return rank(a) - rank(b)
   })
 }
+
+/**
+ * Which language a broadcast is written in, read from its script.
+ *
+ * Devanagari and Odia have their own Unicode blocks, so the script is a
+ * reliable signal and needs no word list. This exists so a dispatcher who
+ * loads the Hindi template and presses announce hears Hindi — the language
+ * is one less thing to get right under pressure.
+ *
+ * @example
+ * detectLanguage('ଅଗ୍ନିକାଣ୍ଡ')       // => 'or'
+ * detectLanguage('आग लगी है')        // => 'hi'
+ * detectLanguage('Fire in B Block')  // => 'en'
+ */
+export function detectLanguage(text: string): LanguageCode {
+  if (/[଀-୿]/.test(text)) return 'or'
+  if (/[ऀ-ॿ]/.test(text)) return 'hi'
+  return 'en'
+}
