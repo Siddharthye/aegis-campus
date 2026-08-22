@@ -43,7 +43,21 @@ export const INTEGRATIONS: readonly Integration[] = [
     enabled: true,
   },
 
-  // ── Acquired modules go below this line ────────────────────────────────
+  // ── Acquired modules ───────────────────────────────────────────────────
+  {
+    id: 'whatsapp-intake',
+    name: 'WhatsApp intake — Twilio webhook',
+    kind: 'intake-channel',
+    // Not iframe or rest: this module is a webhook *receiver*, so it is
+    // mounted as the route Twilio posts to rather than a surface we draw.
+    // See vendor/whatsapp-intake/ for the contract and the port.
+    mount: 'rest',
+    src: '/api/intake/whatsapp',
+    vendor: 'PingBin (MOD-WHATSAPP-INTAKE-03)',
+    enabled: true,
+  },
+
+  // ── Further acquisitions go below this line ────────────────────────────
   // Buyer: Team PROMPT & PRAY (HA-040-7800).
   //
   // Sprint procedure, in order:
