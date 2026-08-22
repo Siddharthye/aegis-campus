@@ -69,6 +69,18 @@ export const INTEGRATIONS: readonly Integration[] = [
     enabled: true,
   },
 
+  {
+    id: 'vitalpath-medical',
+    name: 'VitalPath — medical red-flag triage',
+    kind: 'intake-channel',
+    // A structured intake endpoint rather than a surface we draw.
+    // See vendor/vitalpath-medical/ for the protocol and the port.
+    mount: 'rest',
+    src: '/api/intake/medical',
+    vendor: 'VitalPath (nirmalyajena01)',
+    enabled: true,
+  },
+
   // ── Further acquisitions go below this line ────────────────────────────
   // Buyer: Team PROMPT & PRAY (HA-040-7800).
   //
