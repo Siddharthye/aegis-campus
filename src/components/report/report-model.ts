@@ -21,9 +21,17 @@ export interface CategoryOption {
  * @example
  * CATEGORY_OPTIONS.find((o) => o.category === 'fire')?.defaultSeverity // => 'P0'
  */
+/**
+ * The categories a reporter picks from.
+ *
+ * Medical is deliberately not here. It has its own intake above the form —
+ * four structured questions that decide how fast someone is reached — and a
+ * free-text medical report would be strictly worse than that. `medical`
+ * remains a real category: it is what the medical intake and the WhatsApp
+ * classifier produce, just not something chosen from this list.
+ */
 export const CATEGORY_OPTIONS: readonly CategoryOption[] = [
   { category: 'fire', label: 'Fire', hint: 'Smoke, flames, alarms', defaultSeverity: 'P0' },
-  { category: 'medical', label: 'Medical', hint: 'Injury, collapse, illness', defaultSeverity: 'P1' },
   { category: 'harassment', label: 'Harassment', hint: 'Threats, stalking, abuse', defaultSeverity: 'P1' },
   { category: 'infrastructure', label: 'Infrastructure', hint: 'Leaks, power, damage', defaultSeverity: 'P2' },
   { category: 'security', label: 'Security', hint: 'Theft, intrusion, suspicious', defaultSeverity: 'P2' },
