@@ -44,10 +44,19 @@ export const INTEGRATIONS: readonly Integration[] = [
   },
 
   // ── Acquired modules go below this line ────────────────────────────────
-  // Set `enabled: true` once the seller has run it in front of us, and add a
-  // non-localhost origin to AEGIS_EXT_ALLOWLIST. Each stub below is a gap we
-  // deliberately did not build, so the sprint is a one-line edit under time
-  // pressure rather than a blank-page problem.
+  // Buyer: Team PROMPT & PRAY (HA-040-7800).
+  //
+  // Sprint procedure, in order:
+  //   1. Uncomment the stub matching what was bought.
+  //   2. Paste the seller's deployed base URL into `src`.
+  //   3. Put the seller's team name and ID in `vendor` — it is printed in the
+  //      UI and must match the Deal Register, which is cross-checked live.
+  //   4. Set `enabled: true`.
+  //   5. Add the origin to AEGIS_EXT_ALLOWLIST (comma-separated) in the
+  //      environment, or the proxy will refuse to forward to it.
+  //
+  // Each stub below is a gap we deliberately did not build, so the sprint is a
+  // one-line edit under time pressure rather than a blank-page problem.
   //
   // {
   //   id: 'sms-intake',
@@ -56,7 +65,7 @@ export const INTEGRATIONS: readonly Integration[] = [
   //   mount: 'iframe',
   //   src: 'https://their-module.example',
   //   widgetPath: '/widget',
-  //   vendor: 'Team HA-0XX-XXXX',
+  //   vendor: 'SELLER TEAM NAME (HA-0XX-XXXX)',
   //   enabled: false,
   // },
   // {
@@ -65,7 +74,7 @@ export const INTEGRATIONS: readonly Integration[] = [
   //   kind: 'alert-channel',
   //   mount: 'rest',
   //   src: 'https://their-module.example',
-  //   vendor: 'Team HA-0XX-XXXX',
+  //   vendor: 'SELLER TEAM NAME (HA-0XX-XXXX)',
   //   enabled: false,
   // },
   // {
@@ -75,7 +84,7 @@ export const INTEGRATIONS: readonly Integration[] = [
   //   mount: 'iframe',
   //   src: 'https://their-module.example',
   //   widgetPath: '/widget',
-  //   vendor: 'Team HA-0XX-XXXX',
+  //   vendor: 'SELLER TEAM NAME (HA-0XX-XXXX)',
   //   enabled: false,
   // },
 ]
