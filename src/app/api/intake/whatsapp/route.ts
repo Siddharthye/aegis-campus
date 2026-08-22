@@ -8,6 +8,7 @@ import {
   readWhatsAppMessage,
   type WhatsAppMessage,
 } from '@/domain/whatsapp-intake'
+import { isValidTwilioSignature } from '@/domain/twilio-signature'
 import type { LocatedPosition } from '@/domain/types'
 import { intakeReport } from '@/lib/intake-service'
 
@@ -35,10 +36,14 @@ export const dynamic = 'force-dynamic'
  */
 export async function POST(request: Request) {
   try {
-    const message = readWhatsAppMessage(await request.text())
-    // A message with nothing in it is a delivery receipt or a stray tap.
-    if (message.senderPhone && (message.bodyText || message.mediaUrl || message.latitude)) {
-      await fileAsIncident(message)
+    const body = await request.text()
+
+    if (isFromTwilio(request, body)) {
+      const message = readWhatsAppMessage(body)
+      // A message with nothing in it is a delivery receipt or a stray tap.
+      if (message.senderPhone && (message.bodyText || message.mediaUrl || message.latitude)) {
+        await fileAsIncident(message)
+      }
     }
   } catch {
     // Swallowed on purpose: see the note above about retries.
@@ -47,6 +52,33 @@ export async function POST(request: Request) {
   return new Response(TWILIO_EMPTY_ACK, {
     status: 200,
     headers: { 'Content-Type': 'application/xml' },
+  })
+}
+
+/**
+ * Whether to trust this request.
+ *
+ * With `TWILIO_AUTH_TOKEN` set, only genuinely signed requests are filed —
+ * this endpoint is public by necessity, and an unauthenticated way to raise
+ * emergency incidents is an obvious thing to abuse.
+ *
+ * Without the token, everything is accepted. That is what makes a fresh clone
+ * and the browser-console demo work with no Twilio account at all, and it is
+ * safe precisely because such a deployment has no real reporters to protect.
+ * A rejected request still gets the ACK, so a misconfiguration shows up as
+ * incidents that never arrive rather than as Twilio retrying forever.
+ */
+function isFromTwilio(request: Request, body: string): boolean {
+  const authToken = process.env.TWILIO_AUTH_TOKEN
+  if (!authToken) return true
+
+  return isValidTwilioSignature({
+    // Twilio signs the URL it was configured with. Behind Vercel's proxy the
+    // request URL is already the public one, so it can be used directly.
+    url: request.url,
+    params: Object.fromEntries(new URLSearchParams(body)),
+    signature: request.headers.get('x-twilio-signature'),
+    authToken,
   })
 }
 
