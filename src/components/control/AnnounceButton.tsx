@@ -2,7 +2,7 @@
 
 import { Volume2, VolumeX } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { detectLanguage } from '@/domain/broadcast-templates'
+import { BROADCAST_LANGUAGES, detectLanguage } from '@/domain/broadcast-templates'
 import { JANSETU_LICENCE_KEY, VernacularVoiceEngine } from '@/domain/vernacular-voice'
 
 /**
@@ -14,12 +14,17 @@ import { JANSETU_LICENCE_KEY, VernacularVoiceEngine } from '@/domain/vernacular-
  * Hindi. That works because the broadcast templates are already authored in
  * English, Hindi and Odia.
  *
- * Renders nothing on a device with no speech engine, rather than offering a
- * button that would do nothing when pressed.
+ * When the device has no voice for that language the control says so rather
+ * than failing quietly. Odia is the real case: it ships on almost no desktop,
+ * and a dispatcher who pressed a dead button would believe the announcement
+ * had gone out over the speakers when nothing had been said at all.
  */
 export function AnnounceButton({ text }: { text: string }) {
   const [available, setAvailable] = useState(false)
   const [speaking, setSpeaking] = useState(false)
+  /* Voices load asynchronously and are often empty on first paint, so this
+     is recomputed when the engine reports them. */
+  const [spoken, setSpoken] = useState<string[]>([])
   const engineRef = useRef<VernacularVoiceEngine | null>(null)
 
   useEffect(() => {
@@ -31,9 +36,16 @@ export function AnnounceButton({ text }: { text: string }) {
       defaultLanguage: 'en',
     })
 
-    // Speech outlives the component unless it is stopped on the way out.
+    const refresh = () => setSpoken(VernacularVoiceEngine.spokenLanguages())
+    refresh()
+    window.speechSynthesis.addEventListener('voiceschanged', refresh)
+
     const engine = engineRef.current
-    return () => engine.stop()
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', refresh)
+      // Speech outlives the component unless it is stopped on the way out.
+      engine.stop()
+    }
   }, [])
 
   // Track the engine finishing so the button returns to its resting state.
@@ -47,7 +59,19 @@ export function AnnounceButton({ text }: { text: string }) {
 
   if (!available) return null
 
-  const ready = text.trim().length > 0
+  const language = detectLanguage(text)
+  const languageName =
+    BROADCAST_LANGUAGES.find((entry) => entry.code === language)?.label ?? language
+  const hasVoice = spoken.includes(language)
+  const ready = text.trim().length > 0 && hasVoice
+
+  const label = !text.trim()
+    ? 'Nothing to announce yet'
+    : !hasVoice
+      ? `No ${languageName} voice on this device — install one to announce in ${languageName}`
+      : speaking
+        ? 'Stop the announcement'
+        : `Read this aloud in ${languageName}`
 
   const toggle = () => {
     const engine = engineRef.current
@@ -59,7 +83,7 @@ export function AnnounceButton({ text }: { text: string }) {
       return
     }
 
-    engine.speak(text, detectLanguage(text))
+    engine.speak(text, language)
     setSpeaking(true)
   }
 
@@ -68,15 +92,15 @@ export function AnnounceButton({ text }: { text: string }) {
       type="button"
       disabled={!ready}
       onClick={toggle}
-      title={speaking ? 'Stop the announcement' : 'Read this aloud over the speakers'}
-      aria-label={speaking ? 'Stop the announcement' : 'Read this aloud over the speakers'}
+      title={label}
+      aria-label={label}
       className={`grid size-11 shrink-0 place-items-center rounded-md border transition-colors disabled:opacity-40 sm:size-9 ${
         speaking
           ? 'border-ops-accent/50 bg-ops-accent/15 text-ops-accent'
           : 'border-ops-border text-ops-muted hover:border-ops-accent/40 hover:text-ops-text'
       }`}
     >
-      {speaking ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+      {speaking || !hasVoice ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
     </button>
   )
 }

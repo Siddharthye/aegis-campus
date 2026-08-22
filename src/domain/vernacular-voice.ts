@@ -63,6 +63,29 @@ export class VernacularVoiceEngine {
   }
 
   /**
+   * Whether this device has a voice that can actually read this language.
+   *
+   * Worth asking before offering the control. Odia in particular ships on
+   * almost no desktop: asked to read Odia script with an English voice, the
+   * engine produces silence, and a dispatcher who pressed the button would
+   * believe the announcement went out. Better to say the language is
+   * unavailable than to fail quietly.
+   */
+  static canSpeak(lang: LanguageCode): boolean {
+    if (!VernacularVoiceEngine.isAvailable()) return false
+    if (pickVoice(VOICE_LOCALE[lang]) !== null) return true
+    // Odia can still be spoken through the Hindi voice — see renderFor.
+    return lang === 'or' && pickVoice(VOICE_LOCALE.hi) !== null
+  }
+
+  /** The subset of broadcast languages this device can read aloud. */
+  static spokenLanguages(): LanguageCode[] {
+    return (Object.keys(VOICE_LOCALE) as LanguageCode[]).filter((lang) =>
+      VernacularVoiceEngine.canSpeak(lang),
+    )
+  }
+
+  /**
    * Reads `text` aloud. Cancels anything already speaking, because a second
    * alert must interrupt the first rather than queue behind it.
    */
@@ -71,12 +94,21 @@ export class VernacularVoiceEngine {
 
     window.speechSynthesis.cancel()
 
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = VOICE_LOCALE[lang]
+    const { spoken, locale } = renderFor(text, lang)
+    const utterance = new SpeechSynthesisUtterance(spoken)
+    utterance.lang = locale
     // Slightly under normal pace: an emergency instruction is heard once.
     utterance.rate = 0.95
-    const voice = pickVoice(VOICE_LOCALE[lang])
-    if (voice) utterance.voice = voice
+    const voice = pickVoice(locale)
+    if (voice) {
+      try {
+        utterance.voice = voice
+      } catch {
+        // Naming a specific voice is an optimisation, not the point. If the
+        // engine rejects it, the browser's default still says the words —
+        // and an announcement in the wrong accent beats silence.
+      }
+    }
 
     window.speechSynthesis.speak(utterance)
   }
@@ -85,6 +117,49 @@ export class VernacularVoiceEngine {
   stop(): void {
     if (VernacularVoiceEngine.isAvailable()) window.speechSynthesis.cancel()
   }
+}
+
+/**
+ * Odia and Devanagari both descend from Brahmi, and their Unicode blocks run
+ * exactly 0x200 apart — ଅ U+0B05 to अ U+0905, କ U+0B15 to क U+0915, and so on
+ * through the consonants, vowel signs, virama and digits.
+ */
+const ODIA_TO_DEVANAGARI_OFFSET = 0x200
+const ODIA_BLOCK_START = 0x0b01
+const ODIA_BLOCK_END = 0x0b7c
+
+/** Rewrites Odia script as Devanagari, leaving everything else untouched. */
+export function odiaToDevanagari(text: string): string {
+  return [...text]
+    .map((character) => {
+      const code = character.codePointAt(0) ?? 0
+      return code >= ODIA_BLOCK_START && code <= ODIA_BLOCK_END
+        ? String.fromCodePoint(code - ODIA_TO_DEVANAGARI_OFFSET)
+        : character
+    })
+    .join('')
+}
+
+/**
+ * What to actually utter, and in which locale.
+ *
+ * Odia text normally comes back in silence or in a Hindi accent, because no
+ * desktop ships an Odia voice. Rather than give up, the script is rewritten
+ * into Devanagari and handed to the Hindi voice: the two share enough
+ * phonology that the words come out as Odia words, in a Hindi accent, which
+ * a listener understands — where the alternative was hearing nothing.
+ *
+ * It is an approximation and only used when there is no Odia voice. Install
+ * one and this path is skipped entirely.
+ */
+function renderFor(text: string, lang: LanguageCode): { spoken: string; locale: string } {
+  const native = VOICE_LOCALE[lang]
+
+  if (lang === 'or' && !pickVoice(native) && pickVoice(VOICE_LOCALE.hi)) {
+    return { spoken: odiaToDevanagari(text), locale: VOICE_LOCALE.hi }
+  }
+
+  return { spoken: text, locale: native }
 }
 
 /**
