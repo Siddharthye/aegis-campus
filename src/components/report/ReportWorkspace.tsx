@@ -17,6 +17,7 @@ import { Chip, MiniBar, Panel, Stat } from '@/components/ui/Panel'
 import { useLiveEvents } from '@/hooks/use-live-events'
 import { IntegrationSlot } from '@/integrations/slots'
 import { FloorPlan3D, type FloorSelection } from './FloorPlan3D'
+import { MedicalIntake } from './MedicalIntake'
 import { ReportWizard } from './ReportWizard'
 
 const PIPELINE_EVENTS = ['incident.created', 'incident.updated'] as const
@@ -211,6 +212,8 @@ export function ReportWorkspace() {
             )}
           </div>
         </Panel>
+
+        <MedicalIntake location={pickedLocation} />
 
         <Panel label="File a report" spotlight>
           <div className="p-4">

@@ -12,7 +12,8 @@ type Phase = { kind: 'idle' } | { kind: 'armed'; sessionId: string; pin: string 
 /**
  * SENTINEL — silent panic, armed by a triple-tap.
  *
- * Wraps any region of the report screen. Three taps inside 1.2 seconds arms a
+ * Wraps any region of the report screen. Three taps on bare surface inside
+ * 1.2 seconds arms a
  * session and drops a decoy calculator over the whole display while location
  * streams silently to the control room.
  *
@@ -25,7 +26,15 @@ export function SentinelTrigger({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const tapTimes = useRef<number[]>([])
 
-  const registerTap = async () => {
+  const registerTap = async (event: React.PointerEvent) => {
+    // Only bare surface counts. Filling in the report means tapping buttons
+    // and fields, and three quick taps on those is someone answering
+    // questions — not someone signalling for help. Counting them would arm a
+    // decoy screen over the form they were halfway through.
+    if ((event.target as Element | null)?.closest('button, a, input, select, textarea, [role="button"]')) {
+      return
+    }
+
     const now = Date.now()
     tapTimes.current = [...tapTimes.current, now].filter((time) => now - time < TAP_WINDOW_MS)
     if (tapTimes.current.length < REQUIRED_TAPS) return
@@ -80,7 +89,7 @@ export function SentinelTrigger({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div onPointerDown={() => void registerTap()} className="contents">
+    <div onPointerDown={(event) => void registerTap(event)} className="contents">
       {children}
     </div>
   )
