@@ -69,18 +69,6 @@ export const INTEGRATIONS: readonly Integration[] = [
     enabled: true,
   },
 
-  {
-    id: 'dispatch-escalation',
-    name: 'DispatchGrid — responder escalation ladder',
-    kind: 'custom',
-    // Pure rules, evaluated in-process against the incident timeline; there
-    // is no service to reach. See vendor/dispatch-escalation/.
-    mount: 'rest',
-    src: '/control',
-    vendor: 'DispatchGrid (nirmalyajena01)',
-    enabled: true,
-  },
-
   // ── Further acquisitions go below this line ────────────────────────────
   // Buyer: Team PROMPT & PRAY (HA-040-7800).
   //
