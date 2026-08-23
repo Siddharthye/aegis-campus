@@ -30,6 +30,9 @@ const secondsUntil = (when: Date, now: Date) =>
 export function SafeWalkPanel({ presetDestination = '' }: { presetDestination?: string }) {
   const [walk, setWalk] = useState<SafeWalk | null>(null)
   const identity = useIdentity()
+  /* Set when the control room could not be reached, so the panel never
+     leaves someone believing a walk is being watched when it is not. */
+  const [unreachable, setUnreachable] = useState(false)
   const [destination, setDestination] = useState('')
   const [minutes, setMinutes] = useState<number>(10)
   const [now, setNow] = useState(() => new Date())
@@ -64,14 +67,27 @@ export function SafeWalkPanel({ presetDestination = '' }: { presetDestination?: 
   )
 
   const post = useCallback(async (body: Record<string, unknown>) => {
-    const response = await fetch('/api/safe-walk', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (!response.ok) return null
-    const parsed = (await response.json()) as { walk: SafeWalk }
-    return parsed.walk
+    try {
+      const response = await fetch('/api/safe-walk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!response.ok) {
+        setUnreachable(true)
+        return null
+      }
+      setUnreachable(false)
+      const parsed = (await response.json()) as { walk: SafeWalk }
+      return parsed.walk
+    } catch {
+      /* Deliberately not queued. A Safe Walk is a dead man's switch: nobody
+         is watching the clock until the control room knows the walk exists,
+         and delivering it twenty minutes late would be an alarm for a walk
+         that already ended. Failing loudly is the only honest option. */
+      setUnreachable(true)
+      return null
+    }
   }, [])
 
   const start = async () => {
@@ -146,6 +162,15 @@ export function SafeWalkPanel({ presetDestination = '' }: { presetDestination?: 
         >
           Start Safe Walk
         </button>
+
+        {unreachable && (
+          <p className="mt-2.5 rounded-md border border-sev-p0/40 bg-sev-p0/10 px-2.5 py-2 text-[11px] leading-relaxed text-sev-p0">
+            Could not reach the control room, so no walk was started and nobody is
+            watching the clock. Try again when you have signal — and if this is
+            urgent, report it instead: a report is held on your phone and sends
+            itself.
+          </p>
+        )}
       </section>
     )
   }

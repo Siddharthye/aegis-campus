@@ -7,7 +7,11 @@ import { DecoyCalculator } from './DecoyCalculator'
 const REQUIRED_TAPS = 3
 const TAP_WINDOW_MS = 1200
 
-type Phase = { kind: 'idle' } | { kind: 'armed'; sessionId: string; pin: string } | { kind: 'shown-pin'; sessionId: string }
+type Phase =
+  | { kind: 'idle' }
+  | { kind: 'unreachable' }
+  | { kind: 'armed'; sessionId: string; pin: string }
+  | { kind: 'shown-pin'; sessionId: string }
 
 /**
  * SENTINEL — silent panic, armed by a triple-tap.
@@ -48,14 +52,44 @@ export function SentinelTrigger({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(position ?? {}),
       })
-      if (!response.ok) return
+      if (!response.ok) {
+        setPhase({ kind: 'unreachable' })
+        return
+      }
 
       const body = (await response.json()) as { sessionId: string; pin: string }
       setPhase({ kind: 'armed', sessionId: body.sessionId, pin: body.pin })
     } catch {
-      // Arming failed — stay on the report screen rather than showing a decoy
-      // that is covering nothing.
+      // No decoy is shown, because a decoy over an alarm that was never
+      // raised is a lie told to someone in danger. But the failure is not
+      // swallowed either: silence here reads exactly like a working silent
+      // alarm, which is the worst possible confusion.
+      setPhase({ kind: 'unreachable' })
     }
+  }
+
+  if (phase.kind === 'unreachable') {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ops-deep p-6 text-center">
+        <p className="ops-label text-sev-p0">Alarm not raised</p>
+        <p className="max-w-xs text-[13px] leading-relaxed text-ops-muted">
+          The control room could not be reached, so no silent alarm is running and
+          nobody has your location. This screen is telling you that rather than
+          showing a decoy over nothing.
+        </p>
+        <p className="max-w-xs text-[13px] leading-relaxed text-ops-muted">
+          If you can, call campus security directly. A written report is held on
+          your phone and sends itself when signal returns — the alarm cannot.
+        </p>
+        <button
+          type="button"
+          onClick={() => setPhase({ kind: 'idle' })}
+          className="min-h-11 rounded-md border border-ops-border px-4 text-[12px] font-medium text-ops-muted transition-colors hover:text-ops-text"
+        >
+          Back to the report screen
+        </button>
+      </div>
+    )
   }
 
   if (phase.kind === 'armed') {
