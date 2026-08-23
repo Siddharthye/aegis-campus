@@ -245,7 +245,7 @@ export function Hero() {
       {/* Copy plane left, live-ops capsule floating in the aurora right. */}
       <motion.div
         style={{ y: copyY, opacity: fade }}
-        className="mx-auto grid w-[min(1200px,calc(100%-2rem))] gap-8 py-6 xl:grid-cols-[1.35fr_auto] xl:items-center xl:gap-12"
+        className="mx-auto grid w-[min(1200px,calc(100%-2rem))] gap-8 py-6 lg:grid-cols-[1.3fr_auto] lg:items-center lg:gap-10 xl:gap-12"
       >
         <motion.div style={parallax ? { x: copyDriftX, y: copyDriftY } : undefined}>
           <motion.p
@@ -321,16 +321,17 @@ export function Hero() {
           </motion.div>
         </motion.div>
 
-        {/* Live proof, floating deeper in the parallax than the copy. Wide
-            screens only — the first phone viewport stays uncluttered. */}
+        {/* Live proof, floating deeper in the parallax than the copy. From
+            the laptop width up: below it the copy has the row to itself, and
+            above it the copy alone would leave half the screen empty. */}
         <motion.aside
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.8, ease: EASE }}
           style={parallax ? { x: capsuleDriftX, y: capsuleDriftY } : undefined}
-          className="hidden xl:block"
+          className="hidden lg:block"
         >
-          <div className="glass-chrome w-[280px] rounded-2xl p-5">
+          <div className="glass-chrome w-[260px] rounded-2xl p-5 xl:w-[280px]">
             <p className="ops-label flex items-center gap-2 text-ops-muted">
               <span className="siren-pulse size-1.5 rounded-full bg-emerald-400" />
               Live from the incident store
