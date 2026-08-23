@@ -91,9 +91,12 @@ export function AiConsole({ initialQuestion }: { initialQuestion?: string }) {
         <div className="pointer-events-none absolute inset-y-0 right-0 w-[min(48%,520px)] bg-gradient-to-l from-ops-bg/90 via-ops-bg/35 to-transparent" />
       </div>
 
-      {/* Brand lockup */}
+      {/* Brand lockup — the left half of the stage, so it exists only where
+          there is a left half. Below md the chat dock spans the full width and
+          this would sit behind it, showing through the glass; the dock's own
+          header already says Ask NEXBOT, so nothing is lost by standing down. */}
       <motion.div
-        className="pointer-events-none absolute top-4 left-4 z-10 max-w-[min(100%,28rem)] md:top-6 md:left-6"
+        className="pointer-events-none absolute top-4 left-4 z-10 hidden max-w-[min(100%,28rem)] md:block md:top-6 md:left-6"
         initial={reduceMotion ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: EASE }}
@@ -114,9 +117,10 @@ export function AiConsole({ initialQuestion }: { initialQuestion?: string }) {
         </p>
       </motion.div>
 
-      {/* Live brief chip */}
+      {/* Live brief chip — same story as the lockup. The numbers it carries
+          are not lost on a phone: the chat header shows them instead. */}
       <motion.div
-        className="absolute bottom-28 left-4 z-10 md:bottom-32 md:left-6"
+        className="absolute bottom-28 left-4 z-10 hidden md:block md:bottom-32 md:left-6"
         initial={reduceMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.4, ease: EASE }}
@@ -142,7 +146,12 @@ export function AiConsole({ initialQuestion }: { initialQuestion?: string }) {
             </span>
             <div className="min-w-0">
               <p className="ops-label text-ops-accent">Ask NEXBOT</p>
-              <p className="truncate text-[12px] font-medium text-ops-text">Live campus · local engine</p>
+              {/* The chip over the avatar carries the live count on a wide
+                  screen. Where that chip is hidden, this line carries it. */}
+              <p className="truncate text-[12px] font-medium text-ops-text">
+                <span className="md:hidden">{briefing}</span>
+                <span className="hidden md:inline">Live campus · local engine</span>
+              </p>
             </div>
           </div>
 
