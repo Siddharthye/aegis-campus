@@ -44,7 +44,9 @@ describe('alertsFrom', () => {
     expect(alerts).toHaveLength(1)
     expect(alerts[0].message).toBe('Evacuate B Block via the west stairwell.')
     expect(alerts[0].severity).toBe('P0')
+    expect(alerts[0].category).toBe('fire')
     expect(alerts[0].place).toBe('B Block')
+    expect(alerts[0].at).toEqual({ lat: 20.35, lng: 85.81 })
   })
 
   it('ignores every timeline entry that is not a broadcast', () => {
@@ -90,7 +92,9 @@ describe('isCurrent', () => {
     incidentId: 'inc-1',
     message: 'Evacuate',
     severity: 'P0',
+    category: 'fire',
     place: 'B Block',
+    at: { lat: 20.35, lng: 85.81 },
     sentAt: new Date(NOW.getTime() - hoursAgo * 3_600_000).toISOString(),
   })
 

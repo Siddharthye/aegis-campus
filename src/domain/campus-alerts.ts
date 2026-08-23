@@ -1,4 +1,4 @@
-import type { Incident, Severity } from './types'
+import type { Coordinates, Incident, IncidentCategory, Severity } from './types'
 
 /**
  * What a student on campus actually receives.
@@ -19,8 +19,12 @@ export interface CampusAlert {
   incidentId: string
   message: string
   severity: Severity
+  /** Drives the safety guidance shown beneath the alert. */
+  category: IncidentCategory
   /** Where the incident is, as the control room labelled it. */
   place: string
+  /** The hazard itself, so a reader can be routed away from it. */
+  at: Coordinates
   sentAt: string
 }
 
@@ -46,7 +50,9 @@ export function alertsFrom(incidents: readonly Incident[]): CampusAlert[] {
         incidentId: incident.id,
         message: entry.detail,
         severity: incident.severity,
+        category: incident.category,
         place: incident.location.label.split(' · ')[0],
+        at: { lat: incident.location.lat, lng: incident.location.lng },
         sentAt: entry.at,
       })
     }
