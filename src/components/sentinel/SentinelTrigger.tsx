@@ -3,9 +3,17 @@
 import { useRef, useState } from 'react'
 import { DecoyCalculator } from './DecoyCalculator'
 
-/** Taps required to arm, and the window they must land in. */
+/**
+ * Taps required to arm, and the window they must land in.
+ *
+ * The window is deliberately generous. Three taps in 1.2 seconds is a steady
+ * tempo, and someone frightened enough to need this does not tap steadily —
+ * missing the alarm because the third tap came late is a far worse failure
+ * than the alternative, and requiring bare surface already rules out the
+ * accidental case.
+ */
 const REQUIRED_TAPS = 3
-const TAP_WINDOW_MS = 1200
+const TAP_WINDOW_MS = 1800
 
 type Phase =
   | { kind: 'idle' }
