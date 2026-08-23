@@ -104,3 +104,79 @@ self.addEventListener('fetch', (event) => {
       }),
   )
 })
+
+/* ── Background delivery of held reports ─────────────────────────────────
+   The queue lives in IndexedDB precisely so this can reach it: localStorage
+   is invisible to a service worker, and a report that only sends when
+   someone reopens the tab is not really queued.
+
+   These three constants and the record shape mirror `src/lib/queue-store.ts`.
+   A service worker is a separate script and cannot import from the bundle,
+   so the duplication is deliberate — change one, change the other. */
+const DB_NAME = 'aegis'
+const DB_VERSION = 1
+const STORE = 'report-queue'
+const SYNC_TAG = 'aegis-flush-reports'
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' })
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+function readAll(db) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(STORE, 'readonly').objectStore(STORE).getAll()
+    request.onsuccess = () => resolve(request.result ?? [])
+    request.onerror = () => reject(request.error)
+  })
+}
+
+function remove(db, id) {
+  return new Promise((resolve) => {
+    const transaction = db.transaction(STORE, 'readwrite')
+    transaction.objectStore(STORE).delete(id)
+    transaction.oncomplete = () => resolve()
+    transaction.onerror = () => resolve()
+  })
+}
+
+/**
+ * Sends everything held, dropping each report that lands.
+ *
+ * A 400 is dropped too: a malformed report will never become valid, and
+ * retrying it forever would keep the sync alive and the radio awake.
+ * Anything else is left in place, and throwing tells the browser to try the
+ * whole batch again later with its own backoff.
+ */
+async function flushQueue() {
+  const db = await openDatabase()
+  const held = await readAll(db)
+  let failed = 0
+
+  for (const report of held) {
+    try {
+      const response = await fetch(report.endpoint ?? '/api/incidents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report.body),
+      })
+      if (response.ok || response.status === 400) await remove(db, report.id)
+      else failed++
+    } catch {
+      failed++
+    }
+  }
+
+  if (failed > 0) throw new Error(`${failed} report(s) still held`)
+}
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === SYNC_TAG) event.waitUntil(flushQueue())
+})

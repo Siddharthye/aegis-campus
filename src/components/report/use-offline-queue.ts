@@ -5,28 +5,13 @@ import {
   dropReport,
   enqueueReport,
   markAttempt,
-  parseQueue,
   pruneQueue,
   type QueuedReport,
 } from '@/domain/offline-queue'
-
-const STORAGE_KEY = 'aegis.report-queue'
+import { readQueue, requestBackgroundFlush, writeQueue } from '@/lib/queue-store'
 
 /** How often a queued report is retried while the tab stays open. */
 const RETRY_INTERVAL_MS = 15_000
-
-const readStoredQueue = (): QueuedReport[] =>
-  typeof window === 'undefined' ? [] : parseQueue(window.localStorage.getItem(STORAGE_KEY))
-
-const writeStoredQueue = (queue: readonly QueuedReport[]): void => {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(queue))
-  } catch {
-    // Storage full or blocked (private mode). The in-memory queue still works
-    // for this session; losing durability is better than losing the report.
-  }
-}
 
 export interface OfflineQueue {
   /** Reports still waiting to reach the server. */
@@ -42,9 +27,12 @@ export interface OfflineQueue {
  * Holds reports that could not be sent, and delivers them when the network
  * comes back.
  *
- * Retries are driven by the `online` event *and* a slow interval, because a
- * phone that walks out of a dead zone often fires no event at all — the
- * browser only knows it has an interface, not that the interface works.
+ * Delivery is attempted three ways, because no one of them is enough. The
+ * `online` event catches the common case. A slow interval covers the phone
+ * that walks out of a dead zone without firing any event, because the browser
+ * only knows it has an interface, not that the interface works. And
+ * Background Sync hands the queue to the browser itself, so a report still
+ * sends after this tab is closed — the case the other two cannot reach.
  *
  * @example
  * const { queue, flush, queued, online } = useOfflineQueue()
@@ -58,17 +46,17 @@ export function useOfflineQueue(): OfflineQueue {
   // after mount rather than during render — otherwise SSR and the client would
   // disagree about the initial markup.
   useEffect(() => {
-    setQueued(pruneQueue(readStoredQueue(), new Date()))
     setOnline(navigator.onLine)
+    void readQueue().then((stored) => setQueued(pruneQueue(stored, new Date())))
   }, [])
 
   const persist = useCallback((next: QueuedReport[]) => {
     setQueued(next)
-    writeStoredQueue(next)
+    void writeQueue(next)
   }, [])
 
   const flush = useCallback(async () => {
-    let working = pruneQueue(readStoredQueue(), new Date())
+    let working = pruneQueue(await readQueue(), new Date())
 
     for (const report of working) {
       try {
@@ -106,7 +94,13 @@ export function useOfflineQueue(): OfflineQueue {
         queuedAt: new Date().toISOString(),
         attempts: 0,
       }
-      persist(enqueueReport(readStoredQueue(), report))
+
+      void readQueue().then((stored) => {
+        persist(enqueueReport(stored, report))
+        // Hand it to the browser as well, so it goes out even if this tab
+        // does not survive to see the network come back.
+        void requestBackgroundFlush()
+      })
     },
     [persist],
   )
