@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { StoreContentionError } from './adapter'
 
 const get = vi.fn()
 const put = vi.fn()
@@ -84,7 +85,10 @@ describe('blob adapter concurrent writes', () => {
     ])
   })
 
-  it('gives up rather than silently dropping a write it could not land', async () => {
+  it('reports contention as contention, not as a broken store', async () => {
+    // The caller above this one degrades to a local copy when the store cannot
+    // be reached. A busy store must not look like that, or a burst of reports
+    // would cut the instance off from everyone else's data for good.
     // A fresh response per read: a body can only be consumed once, and the
     // retry reads again.
     get.mockImplementation(async () => found([]))
@@ -92,6 +96,6 @@ describe('blob adapter concurrent writes', () => {
 
     await expect(
       createBlobAdapter().mutateCollection('incidents', (items) => ({ next: items, result: null })),
-    ).rejects.toThrow('Precondition failed')
+    ).rejects.toThrow(StoreContentionError)
   })
 })

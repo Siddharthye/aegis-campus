@@ -1,5 +1,10 @@
 import { BlobNotFoundError, get, put } from '@vercel/blob'
-import { EVENT_LOG_LIMIT, type StorageAdapter, type StreamEvent } from './adapter'
+import {
+  EVENT_LOG_LIMIT,
+  StoreContentionError,
+  type StorageAdapter,
+  type StreamEvent,
+} from './adapter'
 
 /**
  * Vercel Blob storage — the shared state a deployed AEGIS runs on.
@@ -33,7 +38,19 @@ const prefix = (name: string) => `aegis/${name}.json`
 const EVENTS_PATHNAME = prefix('events')
 
 /** Attempts for a conditional write before giving up. */
-const MAX_WRITE_ATTEMPTS = 4
+const MAX_WRITE_ATTEMPTS = 8
+
+/**
+ * Waits a growing, randomised moment before retrying a lost race.
+ *
+ * Retrying immediately makes contention worse: the writers that just collided
+ * collide again, in step. Spreading them out is what lets a burst of reports
+ * — the thing this system is built for — all land.
+ */
+function backOff(attempt: number): Promise<void> {
+  const ceiling = 25 * 2 ** attempt
+  return new Promise((resolve) => setTimeout(resolve, Math.random() * ceiling))
+}
 
 interface Snapshot<T> {
   items: T[]
@@ -88,8 +105,6 @@ async function mutate<T, R>(
   pathname: string,
   change: (items: T[]) => { next: T[]; result: R },
 ): Promise<R> {
-  let lastError: unknown
-
   for (let attempt = 0; attempt < MAX_WRITE_ATTEMPTS; attempt++) {
     const { items, etag } = await readSnapshot<T>(pathname)
     const { next, result } = change(items)
@@ -97,14 +112,14 @@ async function mutate<T, R>(
     try {
       await writeSnapshot(pathname, next, etag)
       return result
-    } catch (error) {
+    } catch {
       // A precondition failure means a concurrent write landed first, so the
       // read is stale and the whole change has to be recomputed against it.
-      lastError = error
+      await backOff(attempt)
     }
   }
 
-  throw lastError
+  throw new StoreContentionError(pathname, MAX_WRITE_ATTEMPTS)
 }
 
 export function createBlobAdapter(): StorageAdapter {

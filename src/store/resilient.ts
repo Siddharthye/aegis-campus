@@ -1,4 +1,4 @@
-import type { StorageAdapter } from './adapter'
+import { StoreContentionError, type StorageAdapter } from './adapter'
 import { memoryAdapter } from './memory'
 
 /**
@@ -13,6 +13,11 @@ import { memoryAdapter } from './memory'
  * that instance. Permanently, rather than retrying, because a store that is
  * failing is usually failing for the whole life of the instance, and retrying
  * on every read would add its timeout to every request.
+ *
+ * Contention is pointedly excluded. A store that is busy is working, and
+ * treating "two people reported at once" as an outage would cut this instance
+ * off from everyone else's data for good — turning a moment of load into
+ * permanent, invisible data loss. Those failures are passed through.
  *
  * The trade is explicit: reachable store means shared state across
  * invocations; unreachable means each instance keeps its own copy, exactly as
@@ -31,6 +36,8 @@ export function withMemoryFallback(primary: StorageAdapter, label: string): Stor
     try {
       return await viaPrimary()
     } catch (error) {
+      if (error instanceof StoreContentionError) throw error
+
       failed = true
       console.error(
         `[store] ${label} unreachable, serving from memory for this instance:`,

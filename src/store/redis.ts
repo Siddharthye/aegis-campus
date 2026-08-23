@@ -1,5 +1,10 @@
 import { Redis } from '@upstash/redis'
-import { EVENT_LOG_LIMIT, type StorageAdapter, type StreamEvent } from './adapter'
+import {
+  EVENT_LOG_LIMIT,
+  StoreContentionError,
+  type StorageAdapter,
+  type StreamEvent,
+} from './adapter'
 
 const KEY_PREFIX = 'aegis'
 const collectionKey = (name: string) => `${KEY_PREFIX}:collection:${name}`
@@ -9,7 +14,13 @@ const EVENT_COUNTER_KEY = `${KEY_PREFIX}:events:id`
 const versionKey = (name: string) => `${KEY_PREFIX}:collection:${name}:version`
 
 /** Attempts for a conditional write before giving up. */
-const MAX_WRITE_ATTEMPTS = 4
+const MAX_WRITE_ATTEMPTS = 8
+
+/** Spreads collided writers apart so the retry does not just collide again. */
+function backOff(attempt: number): Promise<void> {
+  const ceiling = 25 * 2 ** attempt
+  return new Promise((resolve) => setTimeout(resolve, Math.random() * ceiling))
+}
 
 /**
  * Writes `value` only if the version is still what the caller read, and bumps
@@ -64,9 +75,10 @@ export function createRedisAdapter(): StorageAdapter {
         if (swapped === 1) return result
         // Another writer landed first, so this read is stale and the whole
         // change has to be recomputed against what is actually stored.
+        await backOff(attempt)
       }
 
-      throw new Error(`Contended write to "${name}" gave up after ${MAX_WRITE_ATTEMPTS} attempts`)
+      throw new StoreContentionError(name, MAX_WRITE_ATTEMPTS)
     },
 
     async appendEvent(type: string, payload: unknown): Promise<StreamEvent> {

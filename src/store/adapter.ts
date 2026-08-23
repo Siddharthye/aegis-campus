@@ -44,5 +44,22 @@ export interface StorageAdapter {
   latestEventId(): Promise<number>
 }
 
+/**
+ * Thrown when a conditional write kept losing the race to other writers.
+ *
+ * A contended store is busy, not broken. That distinction matters because the
+ * usual response to a failing store — fall back to a local copy for the rest
+ * of this instance's life — would be catastrophic here: two people reporting
+ * the same fire at once would cut an instance off from everyone else's data
+ * permanently. Contention is retried, and if it still will not settle it is
+ * reported honestly rather than absorbed.
+ */
+export class StoreContentionError extends Error {
+  constructor(name: string, attempts: number) {
+    super(`Write to "${name}" lost to concurrent writers after ${attempts} attempts`)
+    this.name = 'StoreContentionError'
+  }
+}
+
 /** Events retained in the log. Older entries are discarded to bound memory. */
 export const EVENT_LOG_LIMIT = 500
