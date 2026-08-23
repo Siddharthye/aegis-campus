@@ -13,13 +13,14 @@
  * `use-offline-queue.ts`, so they survive the tab closing entirely, which a
  * service worker fetch retry would not.
  */
-const CACHE = 'aegis-shell-v2'
+const CACHE = 'aegis-shell-v3'
 
 /* The screens someone opens when they are in trouble. Safe Walk is here
    because a dead zone and needing to know which way to walk are the same
    situation: alone, outdoors, after dark, at the edge of campus. */
 const PRECACHE = [
   '/report',
+  '/alerts',
   '/safe-walk',
   '/case',
   '/manifest.webmanifest',
