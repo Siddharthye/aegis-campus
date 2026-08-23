@@ -41,15 +41,27 @@ interface Snapshot<T> {
   etag: string | null
 }
 
-/** Reads a JSON object, treating "never written" as empty rather than an error. */
+/**
+ * Reads a JSON object, treating "never written" as empty rather than an error.
+ *
+ * The distinction between *absent* and *unreadable* is load-bearing here.
+ * Callers seed an empty collection with demo fixtures, so a read that answered
+ * "empty" after a rate limit or an outage would overwrite a live incident
+ * board with sample data. Only `BlobNotFoundError` means absent; anything else
+ * that does not yield a readable body throws, which degrades the instance to
+ * memory and leaves the stored data untouched. Stale beats destroyed.
+ */
 async function readSnapshot<T>(pathname: string): Promise<Snapshot<T>> {
   try {
     const result = await get(pathname, { access: 'private', useCache: false })
-    if (!result || result.statusCode !== 200) return { items: [], etag: null }
+    if (!result || result.statusCode !== 200) {
+      throw new Error(`Blob read failed for ${pathname}: ${result?.statusCode ?? 'no response'}`)
+    }
 
     const text = await new Response(result.stream).text()
     return { items: JSON.parse(text) as T[], etag: result.blob.etag }
   } catch (error) {
+    // The one signal that genuinely means "nothing has been written yet".
     if (error instanceof BlobNotFoundError) return { items: [], etag: null }
     throw error
   }
