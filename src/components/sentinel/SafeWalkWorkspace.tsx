@@ -29,6 +29,9 @@ export function SafeWalkWorkspace() {
     routes: RouteRisk[]
   } | null>(null)
   const [pickedDestination, setPickedDestination] = useState('')
+  /* Distinguishes 'still loading' from 'asked and could not answer', so the
+     panel never claims to be reading something it has given up on. */
+  const [riskUnavailable, setRiskUnavailable] = useState(false)
 
   const now = useLiveClock()
   const hour = now?.getHours() ?? null
@@ -53,7 +56,10 @@ export function SafeWalkWorkspace() {
           }>,
       )
       .then(setRisk)
-      .catch(() => setRisk(null))
+      .catch(() => {
+        setRisk(null)
+        setRiskUnavailable(true)
+      })
   }, [hour])
 
   useEffect(() => {
@@ -228,7 +234,11 @@ export function SafeWalkWorkspace() {
           }
         >
           {!risk ? (
-            <p className="px-4 py-5 text-[12px] text-ops-muted">Reading the incident history…</p>
+            <p className="px-4 py-5 text-[12px] leading-relaxed text-ops-muted">
+              {riskUnavailable
+                ? 'No connection, and no saved copy of the incident history on this device. Routes are still on the map — lit ones are drawn solid, unlit dashed.'
+                : 'Reading the incident history…'}
+            </p>
           ) : (
             <>
               <ul className="divide-y divide-ops-border/60">

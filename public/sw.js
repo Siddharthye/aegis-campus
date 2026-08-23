@@ -13,8 +13,27 @@
  * `use-offline-queue.ts`, so they survive the tab closing entirely, which a
  * service worker fetch retry would not.
  */
-const CACHE = 'aegis-shell-v1'
-const PRECACHE = ['/report', '/case', '/manifest.webmanifest', '/icon.svg']
+const CACHE = 'aegis-shell-v2'
+
+/* The screens someone opens when they are in trouble. Safe Walk is here
+   because a dead zone and needing to know which way to walk are the same
+   situation: alone, outdoors, after dark, at the edge of campus. */
+const PRECACHE = [
+  '/report',
+  '/safe-walk',
+  '/case',
+  '/manifest.webmanifest',
+  '/icon.svg',
+]
+
+/* Advisory data that is worth having stale.
+   Risk patterns are computed over sixty days and banded into three-hour
+   windows, so yesterday's copy gives the same answer as today's — and a
+   walker deciding which way to go in the dark is far better served by an
+   old answer than by none. Everything else under /api stays uncached:
+   a stale incident board would show a dispatcher an emergency that is
+   already handled, or hide one that is not. */
+const CACHEABLE_API = ['/api/risk']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -43,8 +62,30 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
 
-  // Emergency data must never be served stale.
-  if (url.pathname.startsWith('/api/')) return
+  if (url.pathname.startsWith('/api/')) {
+    // Advisory endpoints answer from the network when there is one and from
+    // the last good copy when there is not. Everything else is left alone,
+    // so a dispatcher can never be shown a stale board.
+    if (!CACHEABLE_API.some((path) => url.pathname.startsWith(path))) return
+
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone()
+            void caches.open(CACHE).then((cache) => cache.put(request, copy))
+          }
+          return response
+        })
+        .catch(async () => {
+          const cached = await caches.match(request)
+          if (cached) return cached
+          // Never seen online, so there is nothing honest to serve.
+          return Response.error()
+        }),
+    )
+    return
+  }
 
   event.respondWith(
     fetch(request)
