@@ -59,3 +59,39 @@ describe('blob adapter reads', () => {
     await expect(createBlobAdapter().readCollection('incidents')).rejects.toThrow()
   })
 })
+
+describe('blob adapter concurrent writes', () => {
+  it('recomputes against fresh state when another write lands first', async () => {
+    // The lost-update case: two reports filed in the same second. Without a
+    // conditional write the second one reads the list before the first was
+    // stored, and overwrites it — the reporter is told "filed" and the report
+    // does not exist. The retry has to rebuild from what is actually there.
+    get
+      .mockResolvedValueOnce(found([{ id: 'inc-a' }]))
+      .mockResolvedValueOnce(found([{ id: 'inc-a' }, { id: 'inc-b' }]))
+    put.mockRejectedValueOnce(new Error('Precondition failed: ETag mismatch')).mockResolvedValue({})
+
+    const appended = await createBlobAdapter().mutateCollection<{ id: string }, number>(
+      'incidents',
+      (items) => ({ next: [...items, { id: 'inc-c' }], result: items.length + 1 }),
+    )
+
+    expect(appended).toBe(3)
+    expect(JSON.parse(put.mock.calls.at(-1)![1] as string)).toEqual([
+      { id: 'inc-a' },
+      { id: 'inc-b' },
+      { id: 'inc-c' },
+    ])
+  })
+
+  it('gives up rather than silently dropping a write it could not land', async () => {
+    // A fresh response per read: a body can only be consumed once, and the
+    // retry reads again.
+    get.mockImplementation(async () => found([]))
+    put.mockRejectedValue(new Error('Precondition failed: ETag mismatch'))
+
+    await expect(
+      createBlobAdapter().mutateCollection('incidents', (items) => ({ next: items, result: null })),
+    ).rejects.toThrow('Precondition failed')
+  })
+})

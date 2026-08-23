@@ -20,6 +20,25 @@ export interface StreamEvent {
 export interface StorageAdapter {
   readCollection<T>(name: string): Promise<T[]>
   writeCollection<T>(name: string, items: readonly T[]): Promise<void>
+
+  /**
+   * Reads a collection, applies `change` to it, and stores the result as one
+   * indivisible step.
+   *
+   * Reading and then writing as two calls loses updates: two reports filed in
+   * the same second both read the same list, both write their own version of
+   * it, and one of them silently never happened — while its reporter was told
+   * it was filed. Every mutation that depends on current state belongs here
+   * rather than in a `readCollection`/`writeCollection` pair.
+   *
+   * `change` must be pure, because a contended store will call it again
+   * against fresher state rather than overwrite what it found.
+   */
+  mutateCollection<T, R>(
+    name: string,
+    change: (items: T[]) => { next: T[]; result: R },
+  ): Promise<R>
+
   appendEvent(type: string, payload: unknown): Promise<StreamEvent>
   readEventsSince(cursor: number): Promise<StreamEvent[]>
   latestEventId(): Promise<number>

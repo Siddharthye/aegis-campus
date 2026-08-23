@@ -117,6 +117,13 @@ export function createBlobAdapter(): StorageAdapter {
       await writeSnapshot(prefix(name), items)
     },
 
+    async mutateCollection<T, R>(
+      name: string,
+      change: (items: T[]) => { next: T[]; result: R },
+    ): Promise<R> {
+      return mutate<T, R>(prefix(name), change)
+    },
+
     async appendEvent(type: string, payload: unknown): Promise<StreamEvent> {
       return mutate<StreamEvent, StreamEvent>(EVENTS_PATHNAME, (events) => {
         const event: StreamEvent = {

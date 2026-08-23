@@ -22,6 +22,27 @@ import { seedIncidents, seedResponders } from './seed'
 const INCIDENTS = 'incidents'
 const RESPONDERS = 'responders'
 
+/**
+ * Applies `change` to a single incident, atomically.
+ *
+ * Returns null when nothing has that id, which every caller turns into a 404.
+ */
+async function updateIncident(
+  incidentId: string,
+  change: (incident: Incident) => Incident,
+): Promise<Incident | null> {
+  return mutateIncidents<Incident | null>((incidents) => {
+    const current = incidents.find((item) => item.id === incidentId)
+    if (!current) return { next: incidents, result: null }
+
+    const updated = change(current)
+    return {
+      next: incidents.map((item) => (item.id === incidentId ? updated : item)),
+      result: updated,
+    }
+  })
+}
+
 /** Seeds demo data on first read so a fresh clone shows a living product. */
 async function loadIncidents(): Promise<Incident[]> {
   const existing = await store.readCollection<Incident>(INCIDENTS)
@@ -35,6 +56,30 @@ async function loadResponders(): Promise<Responder[]> {
   if (existing.length > 0) return existing
   await store.writeCollection(RESPONDERS, seedResponders)
   return seedResponders
+}
+
+/**
+ * Changes the incident list as one atomic step.
+ *
+ * Every mutation below is read-modify-write, and doing that as a separate read
+ * and write loses updates: two people reporting the same fire in the same
+ * second both read the same list, both write their own version of it, and one
+ * report silently never happened — after its reporter was told it was filed.
+ * That is the worst failure an incident board has, so all of them go through
+ * here.
+ *
+ * `change` may run more than once, against fresher state each time, so it must
+ * not have side effects of its own. Events are appended by the caller after
+ * this returns, once the write is known to have landed.
+ */
+async function mutateIncidents<R>(
+  change: (incidents: Incident[]) => { next: Incident[]; result: R },
+): Promise<R> {
+  return store.mutateCollection<Incident, R>(INCIDENTS, (existing) =>
+    // Seeding happens inside the same step, so it can never overwrite a board
+    // that another request has just written to.
+    change(existing.length > 0 ? existing : seedIncidents),
+  )
 }
 
 const entry = (actor: string, action: string, detail?: string): TimelineEntry => ({
@@ -73,8 +118,6 @@ export async function getIncident(id: string): Promise<Incident | null> {
 
 /** Records a new incident and publishes it to the live event stream. */
 export async function createIncident(input: CreateIncidentInput): Promise<Incident> {
-  const incidents = await loadIncidents()
-
   const incident: Incident = {
     id: `inc-${randomUUID().slice(0, 8)}`,
     category: input.category,
@@ -96,7 +139,7 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
     ...(input.caseTokenHash ? { caseTokenHash: input.caseTokenHash } : {}),
   }
 
-  await store.writeCollection(INCIDENTS, [...incidents, incident])
+  await mutateIncidents((incidents) => ({ next: [...incidents, incident], result: null }))
   await store.appendEvent('incident.created', incident)
   return incident
 }
@@ -117,22 +160,18 @@ export async function assignResponder(
   responderId: string,
   actor = 'dispatcher',
 ): Promise<Incident | null> {
-  const [incidents, responders] = await Promise.all([loadIncidents(), loadResponders()])
-  const incident = incidents.find((item) => item.id === incidentId)
+  const responders = await loadResponders()
   const responder = responders.find((item) => item.id === responderId)
-  if (!incident || !responder) return null
+  if (!responder) return null
 
-  const updated: Incident = {
+  const updated = await updateIncident(incidentId, (incident) => ({
     ...incident,
     status: 'dispatched',
     assignedResponderIds: [...new Set([...incident.assignedResponderIds, responderId])],
     timeline: [...incident.timeline, entry(actor, 'dispatched', `${responder.name} (${responder.unit})`)],
-  }
+  }))
+  if (!updated) return null
 
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.map((item) => (item.id === incidentId ? updated : item)),
-  )
   await store.writeCollection(
     RESPONDERS,
     responders.map((item) =>
@@ -152,28 +191,20 @@ export async function updateStatus(
   actor: string,
   detail?: string,
 ): Promise<Incident | null> {
-  const incidents = await loadIncidents()
-  const incident = incidents.find((item) => item.id === incidentId)
-  if (!incident) return null
-
-  const updated: Incident = {
+  const updated = await updateIncident(incidentId, (incident) => ({
     ...incident,
     status,
     resolvedAt: status === 'resolved' ? new Date().toISOString() : incident.resolvedAt,
     timeline: [...incident.timeline, entry(actor, status, detail)],
-  }
+  }))
+  if (!updated) return null
 
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.map((item) => (item.id === incidentId ? updated : item)),
-  )
-
-  if (status === 'resolved' && incident.assignedResponderIds.length > 0) {
+  if (status === 'resolved' && updated.assignedResponderIds.length > 0) {
     const responders = await loadResponders()
     await store.writeCollection(
       RESPONDERS,
       responders.map((item) =>
-        incident.assignedResponderIds.includes(item.id)
+        updated.assignedResponderIds.includes(item.id)
           ? { ...item, status: 'available' as const, incidentId: null }
           : item,
       ),
@@ -232,30 +263,25 @@ export async function corroborateIncident(
   reportCount: number,
   confidence: number,
 ): Promise<Incident | null> {
-  const incidents = await loadIncidents()
-  const incident = incidents.find((item) => item.id === incidentId)
-  if (!incident) return null
+  const updated = await updateIncident(incidentId, (incident) => {
+    const severity = severityFromCorroboration(incident.severity, reportCount, confidence)
+    const escalated = severity !== incident.severity
+    const rationale = escalationRationale(reportCount, confidence)
 
-  const severity = severityFromCorroboration(incident.severity, reportCount, confidence)
-  const escalated = severity !== incident.severity
-  const rationale = escalationRationale(reportCount, confidence)
+    return {
+      ...incident,
+      reportCount,
+      confidence,
+      severity,
+      timeline: [
+        ...incident.timeline,
+        entry('fusion', 'corroborated', rationale),
+        ...(escalated ? [entry('system', 'escalated', `${incident.severity} → ${severity} — ${rationale}`)] : []),
+      ],
+    }
+  })
+  if (!updated) return null
 
-  const updated: Incident = {
-    ...incident,
-    reportCount,
-    confidence,
-    severity,
-    timeline: [
-      ...incident.timeline,
-      entry('fusion', 'corroborated', rationale),
-      ...(escalated ? [entry('system', 'escalated', `${incident.severity} → ${severity} — ${rationale}`)] : []),
-    ],
-  }
-
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.map((item) => (item.id === incidentId ? updated : item)),
-  )
   await store.appendEvent('incident.updated', updated)
   return updated
 }
@@ -273,30 +299,22 @@ export async function recordBroadcast(
   message: string,
   actor = 'dispatcher',
 ): Promise<Incident | null> {
-  const incidents = await loadIncidents()
-  const incident = incidents.find((item) => item.id === incidentId)
-  if (!incident) return null
-
-  const updated: Incident = {
+  const updated = await updateIncident(incidentId, (incident) => ({
     ...incident,
     timeline: [...incident.timeline, entry(actor, 'broadcast', message)],
-  }
+  }))
+  if (!updated) return null
 
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.map((item) => (item.id === incidentId ? updated : item)),
-  )
   await store.appendEvent('incident.broadcast', { incidentId, message, at: updated.timeline.at(-1)?.at })
   return updated
 }
 
 /** Removes every drill-produced incident, leaving real ones untouched. */
 export async function clearDrillIncidents(): Promise<void> {
-  const incidents = await loadIncidents()
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.filter((incident) => !incident.isDrill),
-  )
+  await mutateIncidents((incidents) => ({
+    next: incidents.filter((incident) => !incident.isDrill),
+    result: null,
+  }))
   await store.appendEvent('drill.cleared', { at: new Date().toISOString() })
 }
 
@@ -366,19 +384,12 @@ export async function noteOnIncident(
   detail: string,
   actor = 'system',
 ): Promise<Incident | null> {
-  const incidents = await loadIncidents()
-  const incident = incidents.find((item) => item.id === incidentId)
-  if (!incident) return null
-
-  const updated: Incident = {
+  const updated = await updateIncident(incidentId, (incident) => ({
     ...incident,
     timeline: [...incident.timeline, entry(actor, action, detail)],
-  }
+  }))
+  if (!updated) return null
 
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.map((item) => (item.id === incidentId ? updated : item)),
-  )
   await store.appendEvent('incident.updated', updated)
   return updated
 }
@@ -399,26 +410,28 @@ export async function escalateSeverity(
   severity: Severity,
   reason: string,
 ): Promise<Incident | null> {
-  const incidents = await loadIncidents()
-  const incident = incidents.find((item) => item.id === incidentId)
-  if (!incident) return null
+  let raisedTo: Severity | null = null
 
-  const raised = moreUrgentSeverity(incident.severity, severity)
-  if (raised === incident.severity) return incident
+  const updated = await updateIncident(incidentId, (incident) => {
+    const raised = moreUrgentSeverity(incident.severity, severity)
+    if (raised === incident.severity) return incident
 
-  const updated: Incident = {
-    ...incident,
-    severity: raised,
-    timeline: [
-      ...incident.timeline,
-      entry('system', 'escalated', `${incident.severity} → ${raised} — ${reason}`),
-    ],
-  }
+    raisedTo = raised
+    return {
+      ...incident,
+      severity: raised,
+      timeline: [
+        ...incident.timeline,
+        entry('system', 'escalated', `${incident.severity} → ${raised} — ${reason}`),
+      ],
+    }
+  })
+  if (!updated) return null
 
-  await store.writeCollection(
-    INCIDENTS,
-    incidents.map((item) => (item.id === incidentId ? updated : item)),
-  )
+  // Unchanged when the incident was already at least this urgent — nothing
+  // happened, so nothing is announced.
+  if (raisedTo === null) return updated
+
   await store.appendEvent('incident.updated', updated)
   return updated
 }

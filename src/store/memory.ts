@@ -69,6 +69,19 @@ export const memoryAdapter: StorageAdapter = {
     await saveToDisk(name, items)
   },
 
+  /* Node runs one task at a time, so nothing can interleave between the read
+     and the write here — this is already atomic without a lock. */
+  async mutateCollection<T, R>(
+    name: string,
+    change: (items: T[]) => { next: T[]; result: R },
+  ): Promise<R> {
+    await loadFromDisk(name)
+    const { next, result } = change([...((state.collections.get(name) ?? []) as T[])])
+    state.collections.set(name, [...next])
+    await saveToDisk(name, next)
+    return result
+  },
+
   async appendEvent(type: string, payload: unknown): Promise<StreamEvent> {
     const event: StreamEvent = {
       id: state.nextEventId++,

@@ -5,6 +5,25 @@ const KEY_PREFIX = 'aegis'
 const collectionKey = (name: string) => `${KEY_PREFIX}:collection:${name}`
 const EVENTS_KEY = `${KEY_PREFIX}:events`
 const EVENT_COUNTER_KEY = `${KEY_PREFIX}:events:id`
+/** Bumped on every mutation, so a stale read can be detected before it writes. */
+const versionKey = (name: string) => `${KEY_PREFIX}:collection:${name}:version`
+
+/** Attempts for a conditional write before giving up. */
+const MAX_WRITE_ATTEMPTS = 4
+
+/**
+ * Writes `value` only if the version is still what the caller read, and bumps
+ * it. Redis runs a script to completion without interleaving, which is what
+ * makes the check and the write one step.
+ */
+const CAS_SCRIPT = `
+if redis.call('GET', KEYS[2]) == ARGV[2] or (redis.call('EXISTS', KEYS[2]) == 0 and ARGV[2] == '') then
+  redis.call('SET', KEYS[1], ARGV[1])
+  redis.call('INCR', KEYS[2])
+  return 1
+end
+return 0
+`
 
 /**
  * Upstash Redis storage, used automatically when `UPSTASH_REDIS_REST_URL` is set.
@@ -23,6 +42,31 @@ export function createRedisAdapter(): StorageAdapter {
 
     async writeCollection<T>(name: string, items: readonly T[]): Promise<void> {
       await redis.set(collectionKey(name), items)
+    },
+
+    async mutateCollection<T, R>(
+      name: string,
+      change: (items: T[]) => { next: T[]; result: R },
+    ): Promise<R> {
+      for (let attempt = 0; attempt < MAX_WRITE_ATTEMPTS; attempt++) {
+        const [items, version] = await Promise.all([
+          redis.get<T[]>(collectionKey(name)),
+          redis.get<number | string>(versionKey(name)),
+        ])
+
+        const { next, result } = change(items ?? [])
+        const swapped = await redis.eval(
+          CAS_SCRIPT,
+          [collectionKey(name), versionKey(name)],
+          [JSON.stringify(next), version === null ? '' : String(version)],
+        )
+
+        if (swapped === 1) return result
+        // Another writer landed first, so this read is stale and the whole
+        // change has to be recomputed against what is actually stored.
+      }
+
+      throw new Error(`Contended write to "${name}" gave up after ${MAX_WRITE_ATTEMPTS} attempts`)
     },
 
     async appendEvent(type: string, payload: unknown): Promise<StreamEvent> {

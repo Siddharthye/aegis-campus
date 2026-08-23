@@ -53,6 +53,12 @@ export function withMemoryFallback(primary: StorageAdapter, label: string): Stor
         () => memoryAdapter.writeCollection(name, items),
       ),
 
+    mutateCollection: (name, change) =>
+      attempt(
+        () => primary.mutateCollection(name, change),
+        () => memoryAdapter.mutateCollection(name, change),
+      ),
+
     appendEvent: (type, payload) =>
       attempt(
         () => primary.appendEvent(type, payload),
