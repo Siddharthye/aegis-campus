@@ -106,7 +106,7 @@ export function IncidentDetail({
             type="button"
             disabled={busy}
             onClick={() => run(() => onAdvance(nextStatus))}
-            className="mt-3 rounded-md border border-ops-accent/40 bg-ops-accent/10 px-3 py-1.5 text-[12px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20 disabled:opacity-50"
+            className="tap mt-3 inline-flex items-center rounded-md border border-ops-accent/40 bg-ops-accent/10 px-3 py-1.5 text-[12px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20 disabled:opacity-50"
           >
             Advance to {nextStatus}
           </button>
@@ -154,7 +154,7 @@ export function IncidentDetail({
                       type="button"
                       disabled={busy}
                       onClick={() => run(() => onAssign(responder.id))}
-                      className="shrink-0 rounded-md border border-ops-accent/40 bg-ops-accent/10 px-2.5 py-1 text-[11px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20 disabled:opacity-50"
+                      className="tap inline-flex shrink-0 items-center rounded-md border border-ops-accent/40 bg-ops-accent/10 px-3 py-1 text-[11px] font-medium text-ops-accent transition-colors hover:bg-ops-accent/20 disabled:opacity-50"
                     >
                       Dispatch
                     </button>

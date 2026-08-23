@@ -152,7 +152,7 @@ export function AiConsole({ initialQuestion }: { initialQuestion?: string }) {
                 key={suggestion}
                 type="button"
                 onClick={() => submit(suggestion)}
-                className="rounded-full border border-ops-border bg-ops-lift/60 px-2.5 py-1 text-[11px] text-ops-muted transition hover:border-ops-accent/40 hover:text-ops-text"
+                className="tap inline-flex items-center rounded-full border border-ops-border bg-ops-lift/60 px-3 py-1 text-[11px] text-ops-muted transition hover:border-ops-accent/40 hover:text-ops-text"
               >
                 {suggestion}
               </button>

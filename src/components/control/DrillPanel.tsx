@@ -127,7 +127,7 @@ export function DrillPanel({ onPipelineChange }: { onPipelineChange: () => void 
             <select
               value={speed}
               onChange={(event) => setSpeed(Number(event.target.value))}
-              className="rounded border border-ops-border bg-ops-bg px-1.5 py-0.5 font-mono text-[11px] text-ops-text focus:border-ops-accent/50 focus:outline-none"
+              className="tap rounded border border-ops-border bg-ops-bg px-2 py-0.5 font-mono text-[11px] text-ops-text focus:border-ops-accent/50 focus:outline-none"
             >
               {[1, 2, 4].map((option) => (
                 <option key={option} value={option}>

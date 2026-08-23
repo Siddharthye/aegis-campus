@@ -289,6 +289,35 @@ body {
   background: radial-gradient(circle, rgb(139 92 246 / 0.1), transparent 65%);
 }
 
+/**
+ * Touch sizing, in one place.
+ *
+ * A finger needs roughly 44px; a mouse pointer needs none of it. Keying this
+ * on the input device rather than the viewport width is what makes it correct
+ * — a wide phone and a touch laptop both miss a `sm:` breakpoint, and a narrow
+ * desktop window wrongly matches one. Dense ops layouts keep their proportions
+ * on a mouse and grow only where a thumb is doing the work.
+ */
+@media (pointer: coarse) {
+  .tap {
+    min-height: 2.75rem;
+  }
+
+  /* Same rule for the inline controls a row cannot afford to grow: the target
+     is padded outwards instead, so it stays hittable without moving anything. */
+  .tap-inline {
+    position: relative;
+  }
+
+  .tap-inline::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 0 0;
+    min-height: 2.75rem;
+    transform: translateY(-50%);
+  }
+}
+
 /* Keyboard focus — visible, on-brand, and only for keyboard users. */
 :focus-visible {
   outline: 2px solid var(--color-ops-accent);
