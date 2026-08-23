@@ -7,11 +7,13 @@ import {
   P0_FINDINGS,
   P1_FINDINGS,
   P2_FINDINGS,
+  triageMedical,
   type Bleeding,
   type Breathing,
   type Finding,
   type TriageReason,
 } from '@/domain/medical-triage'
+import { useOfflineQueue } from './use-offline-queue'
 import type { LocatedPosition, Severity } from '@/domain/types'
 
 /**
@@ -33,6 +35,8 @@ interface TriageResult {
   reasons: TriageReason[]
   reachTargetSeconds: number
   requiredSkills: string[]
+  /** True when the report is held on this device, waiting for a network. */
+  held?: boolean
 }
 
 const RESPONSIVE_OPTIONS = [
@@ -87,6 +91,7 @@ export function MedicalIntake({ location }: { location: LocatedPosition | null }
   const [note, setNote] = useState('')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<TriageResult | null>(null)
+  const { queue } = useOfflineQueue()
 
   const toggleFinding = (finding: Finding) =>
     setFindings((current) =>
@@ -97,25 +102,57 @@ export function MedicalIntake({ location }: { location: LocatedPosition | null }
 
   const submit = async () => {
     setSending(true)
+
+    const report = {
+      responsive,
+      breathing,
+      bleeding,
+      findings,
+      peopleAffected,
+      note,
+      ...(location ? { lat: location.lat, lng: location.lng } : {}),
+    }
+
     try {
       const response = await fetch('/api/intake/medical', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          responsive,
-          breathing,
-          bleeding,
-          findings,
-          peopleAffected,
-          note,
-          ...(location ? { lat: location.lat, lng: location.lng } : {}),
-        }),
+        body: JSON.stringify(report),
       })
-      if (!response.ok) return
-      setResult((await response.json()) as TriageResult)
+      if (response.ok) {
+        setResult((await response.json()) as TriageResult)
+        return
+      }
+      holdLocally(report)
+    } catch {
+      // No network. The protocol is pure, so the answer does not need one.
+      holdLocally(report)
     } finally {
       setSending(false)
     }
+  }
+
+  /**
+   * Answers from the device and holds the report for delivery.
+   *
+   * The triage cascade is pure logic, so it gives the same priority offline
+   * as the server would — which matters, because someone in a stairwell with
+   * no signal still needs to know whether this is a three-minute problem.
+   * The report itself goes to the offline queue rather than being lost, and
+   * sends itself when the network returns.
+   */
+  const holdLocally = (report: Record<string, unknown>) => {
+    const offline = triageMedical({
+      responsive,
+      breathing,
+      bleeding,
+      findings,
+      peopleAffected,
+      ageGroup: 'unknown',
+    })
+
+    queue(report, '/api/intake/medical')
+    setResult({ ...offline, held: true })
   }
 
   if (result) {
@@ -129,6 +166,14 @@ export function MedicalIntake({ location }: { location: LocatedPosition | null }
           <p className="rounded-md border border-sev-p0/40 bg-sev-p0/10 px-3 py-2 text-[12px] font-medium leading-relaxed text-sev-p0">
             {MEDICAL_DISCLAIMER}
           </p>
+
+          {result.held && (
+            <p className="mt-2 rounded-md border border-sev-p1/40 bg-sev-p1/10 px-3 py-2 text-[12px] leading-relaxed text-sev-p1">
+              No network — this is held on your phone and sends itself the moment
+              signal returns. The priority below was worked out on this device and
+              will not change.
+            </p>
+          )}
 
           <p className="mt-3 text-[13px] text-ops-text">
             Someone should reach you within{' '}

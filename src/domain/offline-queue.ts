@@ -14,7 +14,13 @@
 /** One report waiting to be sent, with the payload exactly as it will POST. */
 export interface QueuedReport {
   id: string
-  /** The `POST /api/incidents` body, held verbatim. */
+  /**
+   * Where this report is going. Absent on reports queued before intake was
+   * split by kind, which are general reports by definition — so the reader
+   * defaults, rather than dropping someone's held emergency on upgrade.
+   */
+  endpoint?: string
+  /** The request body, held verbatim. */
   body: unknown
   queuedAt: string
   /** Delivery attempts so far, used to stop hammering a dead network. */

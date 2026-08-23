@@ -32,8 +32,8 @@ export interface OfflineQueue {
   /** Reports still waiting to reach the server. */
   queued: QueuedReport[]
   online: boolean
-  /** Queues a report for later delivery. */
-  queue: (body: unknown) => void
+  /** Queues a report for later delivery to `endpoint`. */
+  queue: (body: unknown, endpoint?: string) => void
   /** Attempts delivery of everything pending, now. */
   flush: () => Promise<void>
 }
@@ -72,7 +72,7 @@ export function useOfflineQueue(): OfflineQueue {
 
     for (const report of working) {
       try {
-        const response = await fetch('/api/incidents', {
+        const response = await fetch(report.endpoint ?? '/api/incidents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(report.body),
@@ -98,9 +98,10 @@ export function useOfflineQueue(): OfflineQueue {
   }, [persist])
 
   const queue = useCallback(
-    (body: unknown) => {
+    (body: unknown, endpoint = '/api/incidents') => {
       const report: QueuedReport = {
         id: globalThis.crypto.randomUUID().slice(0, 8),
+        endpoint,
         body,
         queuedAt: new Date().toISOString(),
         attempts: 0,
