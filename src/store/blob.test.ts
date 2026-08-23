@@ -94,8 +94,19 @@ describe('blob adapter concurrent writes', () => {
     get.mockImplementation(async () => found([]))
     put.mockRejectedValue(new Error('Precondition failed: ETag mismatch'))
 
-    await expect(
-      createBlobAdapter().mutateCollection('incidents', (items) => ({ next: items, result: null })),
-    ).rejects.toThrow(StoreContentionError)
+    // Fake timers so the growing random backoff is not actually waited out.
+    vi.useFakeTimers()
+    try {
+      const pending = createBlobAdapter().mutateCollection('incidents', (items) => ({
+        next: items,
+        result: null,
+      }))
+      const settled = expect(pending).rejects.toThrow(StoreContentionError)
+
+      await vi.runAllTimersAsync()
+      await settled
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

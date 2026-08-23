@@ -82,11 +82,25 @@ describe('postgres collections', () => {
   it('reports contention as contention, not as a broken store', async () => {
     // A busy database is working. The wrapper above this must not mistake it
     // for an outage and cut the instance over to a private in-memory copy.
-    for (let attempt = 0; attempt < 8; attempt++) results.push([{ items: [], version: 1 }], [])
+    //
+    // Fake timers because the retry backs off by a growing random interval:
+    // waiting it out for real makes this the slowest test in the suite, and
+    // makes whether it finishes in time a coin toss.
+    vi.useFakeTimers()
+    try {
+      for (let attempt = 0; attempt < 8; attempt++) results.push([{ items: [], version: 1 }], [])
 
-    await expect(
-      adapter().mutateCollection('incidents', (items) => ({ next: items, result: null })),
-    ).rejects.toThrow(StoreContentionError)
+      const pending = adapter().mutateCollection('incidents', (items) => ({
+        next: items,
+        result: null,
+      }))
+      const settled = expect(pending).rejects.toThrow(StoreContentionError)
+
+      await vi.runAllTimersAsync()
+      await settled
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
 

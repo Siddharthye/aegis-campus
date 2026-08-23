@@ -9,7 +9,16 @@ import {
   useTransform,
   type MotionValue,
 } from 'framer-motion'
-import { Eye, Merge, Radar, ShieldAlert, Siren } from 'lucide-react'
+import {
+  BellRing,
+  Eye,
+  HeartPulse,
+  Merge,
+  MessageCircle,
+  Radar,
+  ShieldAlert,
+  Siren,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
@@ -68,6 +77,33 @@ const SLIDES = [
     icon: Radar,
   },
   {
+    id: 'whatsapp',
+    kicker: 'WHATSAPP',
+    title: 'No app. Just a message.',
+    body: 'A photo, a pin or a sentence sent to a number opens a triaged incident. Nothing to install, which matters most for the staff and visitors an app never reaches.',
+    href: '/control',
+    cta: 'See it arrive',
+    icon: MessageCircle,
+  },
+  {
+    id: 'medical',
+    kicker: 'MEDICAL',
+    title: 'Four taps under pressure',
+    body: 'Breathing, bleeding, responsive, chest pain. Red flags decide the priority in a cascade a medic can argue with — and it still answers with the phone offline.',
+    href: '/report',
+    cta: 'Open medical intake',
+    icon: HeartPulse,
+  },
+  {
+    id: 'alerts',
+    kicker: 'CAMPUS ALERTS',
+    title: 'The other end of the alarm',
+    body: 'A broadcast reaches the phone it was meant for and reads itself aloud in the language it was written in — Odia, Hindi or English — then says which way to walk.',
+    href: '/alerts',
+    cta: 'See what a student sees',
+    icon: BellRing,
+  },
+  {
     id: 'sightline',
     kicker: 'SIGHTLINE',
     title: 'Which way to walk tonight',
@@ -76,6 +112,17 @@ const SLIDES = [
     cta: 'Start a Safe Walk',
     icon: Eye,
   },
+] as const
+
+/**
+ * Modules bought from other teams on the trading floor and wired into the
+ * product rather than listed on a slide. Each one is load-bearing: take it
+ * out and a capability on this page stops working.
+ */
+const ACQUIRED = [
+  { seller: 'PingBin', capability: 'WhatsApp intake' },
+  { seller: 'JanSetu', capability: 'Vernacular voice' },
+  { seller: 'VitalPath', capability: 'Medical triage' },
 ] as const
 
 interface LiveStats {
@@ -249,6 +296,29 @@ export function Hero() {
               Ask NEXBOT
             </MagneticButton>
           </motion.div>
+
+          {/* The acquisitions, stated plainly. Three modules were bought on
+              the floor and every one of them runs in the product — so they
+              belong next to the capabilities rather than in a footnote. */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8, ease: EASE }}
+            className="mt-7"
+          >
+            <p className="ops-label text-ops-faint">Acquired on the floor · shipped in the product</p>
+            <ul className="mt-2.5 flex flex-wrap gap-2">
+              {ACQUIRED.map((module) => (
+                <li
+                  key={module.seller}
+                  className="flex items-baseline gap-2 rounded-full border border-ops-border bg-ops-panel/60 px-3 py-1.5"
+                >
+                  <span className="text-[12px] font-semibold text-ops-text">{module.seller}</span>
+                  <span className="text-[11px] text-ops-muted">{module.capability}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </motion.div>
 
         {/* Live proof, floating deeper in the parallax than the copy. Wide
@@ -287,7 +357,8 @@ export function Hero() {
             </dl>
 
             <p className="mt-4 border-t border-ops-border/60 pt-3 text-[11px] leading-relaxed text-ops-faint">
-              Six subsystems behind four seats, all of it running with the wifi off.
+              Eight capabilities, three of them bought from other teams, all of it
+              still working with the wifi off.
             </p>
           </div>
         </motion.aside>
