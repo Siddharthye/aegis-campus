@@ -93,12 +93,14 @@ export const INTEGRATIONS: readonly Integration[] = [
   //   5. Add the origin to AEGIS_EXT_ALLOWLIST (comma-separated) in the
   //      environment, or the proxy will refuse to forward to it.
   //
-  // Each stub below is a gap we deliberately did not build, so the sprint is a
-  // one-line edit under time pressure rather than a blank-page problem.
+  // Each stub below is a gap still open, so the sprint is a one-line edit
+  // under time pressure rather than a blank-page problem. WhatsApp intake
+  // started as one of these and is now registered above — bought, ported and
+  // serving, which is what a filled gap looks like.
   //
   // {
-  //   id: 'sms-intake',
-  //   name: 'SMS / WhatsApp / IVR emergency intake',
+  //   id: 'sms-ivr-intake',
+  //   name: 'SMS / IVR emergency intake',
   //   kind: 'intake-channel',
   //   mount: 'iframe',
   //   src: 'https://their-module.example',
