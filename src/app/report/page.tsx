@@ -2,7 +2,7 @@ import { OpsShell } from '@/components/ops/OpsShell'
 import { ReportWorkspace } from '@/components/report/ReportWorkspace'
 import { SentinelTrigger } from '@/components/sentinel/SentinelTrigger'
 
-export const metadata = { title: 'Report — AEGIS' }
+export const metadata = { title: 'Report' }
 
 /**
  * The reporter's seat: the floor you are standing on, and the form.

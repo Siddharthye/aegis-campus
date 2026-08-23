@@ -1,7 +1,7 @@
 import { OpsShell } from '@/components/ops/OpsShell'
 import { SightlineWorkspace } from '@/components/sightline/SightlineWorkspace'
 
-export const metadata = { title: 'SIGHTLINE — AEGIS' }
+export const metadata = { title: 'SIGHTLINE' }
 
 /**
  * SIGHTLINE's own screen.

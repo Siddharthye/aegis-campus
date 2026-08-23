@@ -1,7 +1,7 @@
 import { ControlRoom } from '@/components/control/ControlRoom'
 import { OpsShell } from '@/components/ops/OpsShell'
 
-export const metadata = { title: 'Control Room — AEGIS' }
+export const metadata = { title: 'Control Room' }
 
 type PageProps = { searchParams: Promise<{ incident?: string }> }
 

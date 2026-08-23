@@ -53,10 +53,14 @@ export function IntegrationSlot({ kind, label, showWhenEmpty = false }: Integrat
           key={integration.id}
           className="overflow-hidden rounded-lg border border-ops-border bg-ops-panel"
         >
-          <header className="flex items-center gap-2 border-b border-ops-border px-3 py-2">
+          {/* Wraps rather than columns: in a narrow rail a long name beside a
+              long licence string turns both into cramped two-line stacks. */}
+          <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-ops-border px-3 py-2">
             <span className="ops-label text-ops-accent">{integration.name}</span>
             {integration.vendor && (
-              <span className="ops-label ml-auto text-ops-faint">{integration.vendor}</span>
+              <span className="ops-label ml-auto break-words text-ops-faint">
+                {integration.vendor}
+              </span>
             )}
           </header>
 

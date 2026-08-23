@@ -1,7 +1,7 @@
 import { OpsShell } from '@/components/ops/OpsShell'
 import { SafeWalkWorkspace } from '@/components/sentinel/SafeWalkWorkspace'
 
-export const metadata = { title: 'Safe Walk — AEGIS' }
+export const metadata = { title: 'Safe Walk' }
 
 /**
  * Safe Walk's own screen. Its question is spatial — where am I going, what is

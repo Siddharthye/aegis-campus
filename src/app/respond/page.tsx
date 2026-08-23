@@ -1,7 +1,7 @@
 import { OpsShell } from '@/components/ops/OpsShell'
 import { ResponderBoard } from '@/components/respond/ResponderBoard'
 
-export const metadata = { title: 'Respond — AEGIS' }
+export const metadata = { title: 'Respond' }
 
 /** The responder seat, as a command console: the assignment, the crew, the clock. */
 export default function RespondPage() {

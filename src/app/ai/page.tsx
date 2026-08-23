@@ -1,7 +1,7 @@
 import { AiConsole } from '@/components/nexbot/AiConsole'
 import { OpsShell } from '@/components/ops/OpsShell'
 
-export const metadata = { title: 'NEXBOT — AEGIS ops copilot' }
+export const metadata = { title: 'NEXBOT ops copilot' }
 
 type PageProps = { searchParams: Promise<{ q?: string }> }
 

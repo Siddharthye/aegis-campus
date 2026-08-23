@@ -2,7 +2,7 @@ import { PulseDashboard } from '@/components/analytics/PulseDashboard'
 import { OpsShell } from '@/components/ops/OpsShell'
 import { IntegrationSlot } from '@/integrations/slots'
 
-export const metadata = { title: 'PULSE Analytics — AEGIS' }
+export const metadata = { title: 'PULSE Analytics' }
 
 /** The admin seat: PULSE analytics, ending in a patrol plan rather than a chart. */
 export default function AnalyticsPage() {

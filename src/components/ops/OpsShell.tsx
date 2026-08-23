@@ -12,6 +12,8 @@ interface OpsShellProps {
    * Full-bleed stage (NEXBOT console): no padded content column, no page
    * title block — the child owns the viewport under the dock.
    */
+  /** Hides the signed-in identity, for screens that promise not to know it. */
+  anonymous?: boolean
   immersive?: boolean
   /** Wider than the default column, for map- and console-heavy screens. */
   wide?: boolean
@@ -31,21 +33,23 @@ export function OpsShell({
   subtitle,
   actions,
   meta,
+  anonymous = false,
   immersive = false,
   wide = false,
   children,
 }: OpsShellProps) {
   if (immersive) {
     return (
-      <div className="relative min-h-screen bg-ops-bg">
+      <main id="content" className="relative min-h-screen bg-ops-bg">
         {children}
-      </div>
+      </main>
     )
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-ops-bg">
-      <div
+      <main
+        id="content"
         className={`mx-auto w-full flex-1 px-4 pb-[calc(9rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 ${wide ? 'max-w-[1600px]' : 'max-w-7xl'}`}
       >
         <header className="mb-5 flex flex-wrap items-end gap-x-5 gap-y-3">
@@ -66,13 +70,12 @@ export function OpsShell({
           {/* One clock for the whole site, read from the reader's device. */}
           <div className="ml-auto flex items-center gap-2">
             {actions}
-            <LiveClock />
+            <LiveClock anonymous={anonymous} />
           </div>
         </header>
 
         {children}
-      </div>
-
+      </main>
     </div>
   )
 }

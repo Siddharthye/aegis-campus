@@ -1,7 +1,7 @@
 import { AlertsFeed } from '@/components/alerts/AlertsFeed'
 import { OpsShell } from '@/components/ops/OpsShell'
 
-export const metadata = { title: 'Campus alerts — AEGIS' }
+export const metadata = { title: 'Campus alerts' }
 
 /**
  * The receiving end of a broadcast.

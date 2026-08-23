@@ -25,7 +25,7 @@ export default function LandingPage() {
         <LiquidGradient className="h-full w-full" />
       </div>
       <CustomCursor />
-      <main className="relative z-10 pb-24 sm:pb-0">
+      <main id="content" className="relative z-10 pb-24 sm:pb-0">
         <Hero />
         <CapabilityStrip />
         <FailurePoints />
