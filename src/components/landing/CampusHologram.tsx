@@ -133,7 +133,7 @@ export function CampusHologram({ className }: { className?: string }) {
       const tilt = FLATTEN + (reducedMotion ? 0 : pointerRef.current.y * 0.05)
       const cos = Math.cos(rotation)
       const sin = Math.sin(rotation)
-      const scale = Math.min(width, height) / 640
+      const scale = Math.min(width, height) / 720
 
       /** Local metres → screen point, via rotate-then-isometric. */
       const project = (x: number, y: number, z: number) => {
@@ -141,7 +141,7 @@ export function CampusHologram({ className }: { className?: string }) {
         const ry = x * sin + y * cos
         return {
           x: width / 2 + (rx - ry) * Math.cos(ISO_ANGLE) * scale,
-          y: height * 0.56 + (rx + ry) * Math.sin(ISO_ANGLE) * tilt * scale - z * scale,
+          y: height * 0.52 + (rx + ry) * Math.sin(ISO_ANGLE) * tilt * scale - z * scale,
           depth: rx + ry,
         }
       }
@@ -149,7 +149,7 @@ export function CampusHologram({ className }: { className?: string }) {
       context.clearRect(0, 0, width, height)
 
       /* Ground grid — a subtle perspective floor. */
-      context.strokeStyle = 'rgba(167, 139, 250, 0.06)'
+      context.strokeStyle = 'rgba(167, 139, 250, 0.08)'
       context.lineWidth = 1
       for (let g = -420; g <= 420; g += 60) {
         const a = project(g, -420, 0)
@@ -201,7 +201,7 @@ export function CampusHologram({ className }: { className?: string }) {
           context.closePath()
           context.fillStyle = '#0d1526'
           context.fill()
-          context.strokeStyle = 'rgba(167, 139, 250, 0.10)'
+          context.strokeStyle = 'rgba(167, 139, 250, 0.16)'
           context.stroke()
         }
 
@@ -212,7 +212,7 @@ export function CampusHologram({ className }: { className?: string }) {
         context.closePath()
         context.fillStyle = building.roof
         context.fill()
-        context.strokeStyle = 'rgba(167, 139, 250, 0.28)'
+        context.strokeStyle = 'rgba(167, 139, 250, 0.42)'
         context.stroke()
       }
 

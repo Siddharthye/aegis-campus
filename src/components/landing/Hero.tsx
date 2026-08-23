@@ -23,6 +23,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { RandomLetterSwap } from '@/components/ui/RandomLetterSwap'
+import { CampusHologram } from './CampusHologram'
 import { MagneticButton } from './MagneticButton'
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -321,9 +322,11 @@ export function Hero() {
           </motion.div>
         </motion.div>
 
-        {/* Live proof, floating deeper in the parallax than the copy. From
-            the laptop width up: below it the copy has the row to itself, and
-            above it the copy alone would leave half the screen empty. */}
+        {/* The right half of the first screen, from the laptop width up:
+            the campus itself. The hologram renders the same dataset ATLAS
+            ships — buildings, live incident pulses, a radar sweep — with the
+            stats capsule floating over its corner as the caption. Below lg
+            the copy has the row to itself. */}
         <motion.aside
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -331,36 +334,45 @@ export function Hero() {
           style={parallax ? { x: capsuleDriftX, y: capsuleDriftY } : undefined}
           className="hidden lg:block"
         >
-          <div className="glass-chrome w-[260px] rounded-2xl p-5 xl:w-[280px]">
-            <p className="ops-label flex items-center gap-2 text-ops-muted">
-              <span className="siren-pulse size-1.5 rounded-full bg-emerald-400" />
-              Live from the incident store
+          <div className="relative h-[380px] w-[400px] xl:h-[400px] xl:w-[470px]">
+            <CampusHologram className="absolute -inset-10 h-[calc(100%+5rem)] w-[calc(100%+5rem)]" />
+
+            <p className="ops-label absolute right-0 top-0 flex items-center gap-2 text-ops-faint">
+              <span className="siren-pulse inline-block size-1.5 rounded-full bg-ops-accent" />
+              Campus 25 · live grid
             </p>
 
-            <dl className="mt-4 space-y-4">
-              <CapsuleStat
-                value={stats?.openIncidents ?? 0}
-                label="open incidents"
-                live={stats !== null}
-              />
-              <CapsuleStat
-                value={stats?.respondersAvailable ?? 0}
-                suffix={stats ? `/${stats.responders}` : ''}
-                label="responders ready"
-                live={stats !== null}
-              />
-              <CapsuleStat
-                value={stats?.meanResolutionMin != null ? Math.round(stats.meanResolutionMin) : 0}
-                suffix="m"
-                label="mean resolution"
-                live={stats !== null}
-              />
-            </dl>
+            <div className="glass-chrome absolute -bottom-2 -left-6 w-[256px] rounded-2xl p-4">
+              <p className="ops-label flex items-center gap-2 text-ops-muted">
+                <span className="siren-pulse size-1.5 rounded-full bg-emerald-400" />
+                Live from the incident store
+              </p>
 
-            <p className="mt-4 border-t border-ops-border/60 pt-3 text-[11px] leading-relaxed text-ops-faint">
-              Eight capabilities, three of them bought from other teams, all of it
-              still working with the wifi off.
-            </p>
+              <dl className="mt-4 space-y-4">
+                <CapsuleStat
+                  value={stats?.openIncidents ?? 0}
+                  label="open incidents"
+                  live={stats !== null}
+                />
+                <CapsuleStat
+                  value={stats?.respondersAvailable ?? 0}
+                  suffix={stats ? `/${stats.responders}` : ''}
+                  label="responders ready"
+                  live={stats !== null}
+                />
+                <CapsuleStat
+                  value={stats?.meanResolutionMin != null ? Math.round(stats.meanResolutionMin) : 0}
+                  suffix="m"
+                  label="mean resolution"
+                  live={stats !== null}
+                />
+              </dl>
+
+              <p className="mt-4 border-t border-ops-border/60 pt-3 text-[11px] leading-relaxed text-ops-faint">
+                Eight capabilities, three of them bought from other teams, all of it
+                still working with the wifi off.
+              </p>
+            </div>
           </div>
         </motion.aside>
       </motion.div>
@@ -371,7 +383,7 @@ export function Hero() {
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.9, ease: EASE }}
-        className="mt-8 pb-24 sm:mt-10 sm:pb-8"
+        className="mt-8 pb-24 sm:mt-10"
         style={{ perspective: 1200 }}
         onPointerEnter={() => setHeld(true)}
         onPointerLeave={release}
