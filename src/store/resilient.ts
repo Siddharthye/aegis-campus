@@ -1,6 +1,30 @@
 import { StoreContentionError, type StorageAdapter } from './adapter'
 import { memoryAdapter } from './memory'
 
+/** What a wrapped store is currently doing, for `/api/store-health`. */
+export interface StoreHealth {
+  /** Which store this is, e.g. `vercel-blob`. */
+  label: string
+  /** True once this instance gave up on the shared store. */
+  degraded: boolean
+  /** What went wrong the first time, or null while healthy. */
+  reason: string | null
+}
+
+/**
+ * Health of every wrapped store in this instance.
+ *
+ * Degrading is deliberately silent to users — the console keeps working — but
+ * it must not be silent to operators, because an instance serving its own
+ * private copy of the data looks completely normal from the outside while
+ * everything written to it is invisible to everyone else.
+ */
+const health: StoreHealth[] = []
+
+export function storeHealth(): readonly StoreHealth[] {
+  return health
+}
+
 /**
  * Keeps the app serving when its shared store cannot be reached.
  *
@@ -24,6 +48,9 @@ import { memoryAdapter } from './memory'
  * a fresh clone does. Degraded, not broken.
  */
 export function withMemoryFallback(primary: StorageAdapter, label: string): StorageAdapter {
+  const status: StoreHealth = { label, degraded: false, reason: null }
+  health.push(status)
+
   let failed = false
 
   /** Runs against the primary store, falling back for good on first failure. */
@@ -39,9 +66,11 @@ export function withMemoryFallback(primary: StorageAdapter, label: string): Stor
       if (error instanceof StoreContentionError) throw error
 
       failed = true
+      status.degraded = true
+      status.reason = error instanceof Error ? error.message : String(error)
       console.error(
         `[store] ${label} unreachable, serving from memory for this instance:`,
-        error instanceof Error ? error.message : error,
+        status.reason,
       )
       return viaMemory()
     }
